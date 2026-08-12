@@ -1,13 +1,50 @@
 import { useMemo, useState } from "react";
 import {
-  Bot,
   Clock3,
-  Gauge,
   MessageSquareText,
   Mic,
   MicOff,
   Send,
 } from "lucide-react";
+
+// SVG adaptation of the score-driven flower used by PyPlutchik:
+// https://github.com/alfonsosemeraro/pyplutchik
+const PLUTCHIK_EMOTIONS = [
+  { name: "Joy", color: "#f2ce00" },
+  { name: "Trust", color: "#6b8e23" },
+  { name: "Fear", color: "#228b22" },
+  { name: "Surprise", color: "#74c7e8" },
+  { name: "Sadness", color: "#1e90ff" },
+  { name: "Disgust", color: "#6a5acd" },
+  { name: "Anger", color: "#ff4b2e" },
+  { name: "Anticipation", color: "#ff8c00" },
+];
+
+function polarPoint(radius, angle) {
+  const radians = (angle * Math.PI) / 180;
+  return {
+    x: 160 + radius * Math.cos(radians),
+    y: 160 + radius * Math.sin(radians),
+  };
+}
+
+function petalPath(score, angle) {
+  const baseRadius = 24;
+  const tipRadius = baseRadius + score * 106;
+  const controlRadius = baseRadius + (tipRadius - baseRadius) * 0.56;
+  const baseLeft = polarPoint(baseRadius, angle - 13);
+  const baseRight = polarPoint(baseRadius, angle + 13);
+  const controlLeft = polarPoint(controlRadius, angle - 20);
+  const controlRight = polarPoint(controlRadius, angle + 20);
+  const tip = polarPoint(tipRadius, angle);
+
+  return [
+    `M ${baseLeft.x} ${baseLeft.y}`,
+    `Q ${controlLeft.x} ${controlLeft.y} ${tip.x} ${tip.y}`,
+    `Q ${controlRight.x} ${controlRight.y} ${baseRight.x} ${baseRight.y}`,
+    "Z",
+  ].join(" ");
+}
 
 function formatTime(value = new Date()) {
   return new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(new Date(value));
@@ -37,16 +74,21 @@ export function RuntimeChatScreen({
     showTranscript ? "showTranscript" : "hideTranscript",
   ].join(" ");
 
-  const mind = useMemo(() => {
-    const trust = Math.min(82, 42 + traineeTurns * 8);
-    const comfort = Math.max(36, 72 - traineeTurns * 4);
-    const candor = Math.min(76, 38 + traineeTurns * 7);
-    return [
-      { label: "Trust", value: trust, tone: "teal" },
-      { label: "Composure", value: comfort, tone: "blue" },
-      { label: "Candor", value: candor, tone: "gold" },
+  const emotionScores = useMemo(() => {
+    const progress = Math.min(1, traineeTurns / 4);
+    const scores = [
+      0.12 + progress * 0.18,
+      0.28 + progress * 0.55,
+      0.78 - progress * 0.42,
+      0.34 - progress * 0.12,
+      0.55 - progress * 0.2,
+      0.18 - progress * 0.08,
+      0.36 - progress * 0.18,
+      0.5 - progress * 0.1,
     ];
+    return PLUTCHIK_EMOTIONS.map((emotion, index) => ({ ...emotion, score: scores[index] }));
   }, [traineeTurns]);
+  const currentEmotion = emotionScores.reduce((strongest, emotion) => (emotion.score > strongest.score ? emotion : strongest));
 
   function toggleListening() {
     const nextListening = !listening;
@@ -120,30 +162,7 @@ export function RuntimeChatScreen({
             <span>{session?.session_id || "No active session"}</span>
           </div>
 
-          <div className="runtimeAvatarStage">
-            <div className="runtimeAvatarBackdrop" />
-            <div className="runtimeAvatarPortrait" aria-hidden="true">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                shapeRendering="geometricPrecision"
-                textRendering="geometricPrecision"
-                imageRendering="optimizeQuality"
-                fillRule="evenodd"
-                clipRule="evenodd"
-                viewBox="0 0 512 512"
-              >
-                <path fill="#D0D0D0" d="M0 0h512v512H0z" />
-                <path
-                  fill="#B1B1B1"
-                  d="M174.139 280.588c-11.32-3.697-19.915-9.191-25.926-16.341 17.362-6.542 25.352-27.052 26.478-57.757.835-22.826-3.905-41.685 3.882-64.21 15.414-44.591 72.372-59.828 104.114-33.739 24.888-2.654 49.962 10.181 55.377 48.562 4.041 28.659-4.537 58.357 4.509 84.756 3.891 11.359 10.644 20.047 21.213 25.126-6.775 6.479-16.593 10.776-28.368 13.647-9.112 2.225-25.572 3.932-44.737 4.953v13.44l18.649 24.916-53.361 42.435-53.299-42.057 14.238-23.909v-14.445c-18.584-.88-34.318-2.619-42.769-5.377zm160.831 64.768c-8.26-16.581-18.734-30.641-30.926-43.854 22.977 8.89 50.179 17.669 67.564 28.573 11.06 6.933 16.776 12.157 21.25 20.55 11.016 20.66 9.396 43.614 15.285 65.592H103.856c5.885-21.978 4.266-44.932 15.286-65.592 4.474-8.393 10.186-13.617 21.25-20.55 17.38-10.904 44.582-19.683 67.564-28.573-12.192 13.213-22.666 27.273-30.93 43.854l23.926-.586 53.716 42.901 56.375-42.901 23.927.586z"
-                />
-              </svg>
-            </div>
-            <div className="runtimeAvatarCaption">
-              <Bot size={18} />
-              <span>{busy ? "Formulating response" : "Waiting for response"}</span>
-            </div>
-          </div>
+          <div id="unity-avatar-stage" className="runtimeAvatarStage" aria-label="Avatar display" />
 
           <div className="runtimeLiveResponse">
             <span>{avatarName}</span>
@@ -194,28 +213,38 @@ export function RuntimeChatScreen({
           <div className="runtimePanelHeader">
             <div>
               <p>State of Mind</p>
-              <span>Avatar readout</span>
+              <span>Emotion wheel</span>
             </div>
-            <Gauge size={18} />
           </div>
-          <div className="mindStatus">
-            <strong>{traineeTurns > 1 ? "Opening up" : "Cautious"}</strong>
-            <span>{traineeTurns > 1 ? "More direct, still guarded" : "Low trust, careful answers"}</span>
-          </div>
-          <div className="mindMeters">
-            {mind.map((item) => (
-              <div className="mindMeter" key={item.label}>
-                <div>
-                  <span>{item.label}</span>
-                  <em>{item.value}%</em>
-                </div>
-                <progress className={item.tone} value={item.value} max="100" />
-              </div>
-            ))}
-          </div>
-          <div className="mindCue">
-            <span>Current cue</span>
-            <p>{latestAvatar?.fallback ? "Response used fallback behavior." : "Respond with calm specificity and acknowledge the concern before moving forward."}</p>
+          <div className="emotionWheelShell">
+            <svg className="emotionWheel" viewBox="0 0 320 320" role="img" aria-labelledby="emotion-wheel-title emotion-wheel-description">
+              <title id="emotion-wheel-title">Plutchik's wheel of emotions</title>
+              <desc id="emotion-wheel-description">Eight Plutchik emotion petals sized by the avatar's current emotion scores. The strongest emotion is {currentEmotion.name} at {Math.round(currentEmotion.score * 100)} percent.</desc>
+              {[0.2, 0.4, 0.6, 0.8, 1].map((value) => (
+                <circle className="emotionGuideRing" cx="160" cy="160" r={24 + value * 106} key={value} />
+              ))}
+              {emotionScores.map((emotion, index) => {
+                const spokeEnd = polarPoint(134, -90 + index * 45);
+                return <line className="emotionGuideSpoke" x1="160" y1="160" x2={spokeEnd.x} y2={spokeEnd.y} key={`${emotion.name}-spoke`} />;
+              })}
+              {emotionScores.map((emotion, index) => {
+                const angle = -90 + index * 45;
+                const labelPoint = polarPoint(148, angle);
+                const anchor = labelPoint.x > 170 ? "start" : labelPoint.x < 150 ? "end" : "middle";
+                const isActive = emotion.name === currentEmotion.name;
+                return (
+                  <g className={isActive ? "emotionPetal active" : "emotionPetal"} style={{ color: emotion.color }} key={emotion.name}>
+                    <path d={petalPath(emotion.score, angle)} fill={emotion.color} />
+                    <text className="emotionPetalLabel" x={labelPoint.x} y={labelPoint.y - 4} textAnchor={anchor}>
+                      <tspan x={labelPoint.x}>{emotion.name}</tspan>
+                      <tspan className="emotionPetalScore" x={labelPoint.x} dy="11">{Math.round(emotion.score * 100)}%</tspan>
+                    </text>
+                  </g>
+                );
+              })}
+              <circle className="emotionWheelCenter" cx="160" cy="160" r="22" />
+            </svg>
+            <p className="emotionWheelCaption">Petal length shows strength. <strong>{currentEmotion.name}</strong> is currently most prominent.</p>
           </div>
         </aside>
       </section>
