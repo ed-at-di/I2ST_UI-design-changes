@@ -2,6 +2,10 @@
   command = "npm run build:demo"
   publish = "dist"
 
+[build.environment]
+  NODE_VERSION = "22"
+  VITE_BASE_PATH = "/"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
