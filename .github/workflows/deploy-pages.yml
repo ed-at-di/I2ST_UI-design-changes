@@ -17,7 +17,6 @@ concurrency:
 
 jobs:
   build:
-    if: github.repository != 'ed-at-di/I2ST_UI-design-changes'
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -35,7 +34,7 @@ jobs:
       - name: Build static demo
         run: npm run build:demo
         env:
-          VITE_BASE_PATH: /I2ST_UI/
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
@@ -46,7 +45,6 @@ jobs:
           path: dist
 
   deploy:
-    if: github.repository != 'ed-at-di/I2ST_UI-design-changes'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
