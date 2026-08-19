@@ -633,6 +633,37 @@ input[type="radio"] {
   max-width: none;
 }
 
+.performanceObjectiveField {
+  margin: 0 0 18px;
+}
+
+.performanceObjectiveField textarea {
+  min-height: 92px;
+}
+
+.scenarioStructureSection,
+.evaluationSection {
+  padding: 18px;
+  border: 1px solid #d9e1e5;
+  border-radius: 8px;
+  background: #fbfcfd;
+}
+
+.scenarioStructureGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 16px 20px;
+}
+
+.scenarioStructureGrid .studioField {
+  margin-top: 0;
+  align-content: start;
+}
+
+.scenarioStructureGrid textarea {
+  min-height: 94px;
+}
+
 .factorGroup .checkboxGrid {
   grid-template-columns: repeat(2, minmax(170px, 1fr));
   max-width: none;
@@ -845,6 +876,168 @@ textarea:focus {
   display: grid;
   grid-template-columns: repeat(2, minmax(200px, 1fr));
   gap: 16px 20px;
+}
+
+.evaluationStepBody {
+  gap: 16px;
+}
+
+.evaluationStepBody .wizardStepIntro {
+  margin-bottom: 2px;
+}
+
+.evaluationSection {
+  gap: 12px;
+}
+
+.evaluationSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.evaluationSectionHeader .studioLabel,
+.evaluationSection > .studioLabel {
+  margin-top: 0;
+}
+
+.evaluationSectionHeader > span:last-child {
+  color: #7c8892;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.decisionPointList,
+.repeatableList {
+  display: grid;
+  gap: 12px;
+}
+
+.decisionPointCard {
+  margin: 0;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  border: 1px solid #dce5e9;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.decisionPointCard legend {
+  padding: 0 6px;
+  color: #53616c;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.decisionPointCard label {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+}
+
+.decisionPointCard label > span {
+  color: #66737f;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.decisionPointCard textarea {
+  min-height: 104px;
+  font-size: 14px;
+}
+
+.removeDecisionButton {
+  grid-column: 1 / -1;
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: #8a5b55;
+  font-size: 12.5px;
+  font-weight: 800;
+}
+
+.removeDecisionButton:disabled,
+.iconButton:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.repeatableRow {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) 38px;
+  align-items: start;
+  gap: 10px;
+}
+
+.repeatableIndex {
+  width: 26px;
+  height: 26px;
+  margin-top: 9px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #e9f5f7;
+  color: #087f92;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.repeatableRow textarea {
+  min-height: 72px;
+  font-size: 14px;
+}
+
+.successCriterionInputs {
+  display: grid;
+  gap: 9px;
+}
+
+.successCriterionInputs select {
+  min-height: 40px;
+  font-size: 14px;
+}
+
+.iconButton {
+  width: 38px;
+  height: 38px;
+  margin-top: 3px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid #e1d0cd;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #8a5b55;
+}
+
+.addRowButton {
+  justify-self: start;
+  min-height: 38px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px dashed #7bc5d2;
+  border-radius: 7px;
+  background: #f4fbfc;
+  color: #087f92;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.addRowButton:hover {
+  border-style: solid;
+  background: #eaf7f9;
+}
+
+.evaluationEvidenceGrid {
+  max-width: none;
+  grid-template-columns: repeat(3, minmax(170px, 1fr));
 }
 
 .primaryButton,
@@ -2293,6 +2486,17 @@ textarea:focus {
   border-top: 1px solid #edf1f3;
 }
 
+.livePreviewBlock .livePreviewLabeledItem {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: initial;
+}
+
+.livePreviewLabeledItem strong {
+  color: #4f5d68;
+  font-size: inherit;
+}
+
 .wizardStepBody {
   padding: 30px 32px 10px;
   display: grid;
@@ -2427,7 +2631,10 @@ textarea:focus {
   .competencyGroup .checkboxGrid,
   .factorGroup .checkboxGrid,
   .personaControlGrid,
-  .generatedInputsSection {
+  .generatedInputsSection,
+  .scenarioStructureGrid,
+  .decisionPointCard,
+  .evaluationEvidenceGrid {
     grid-template-columns: 1fr;
   }
 

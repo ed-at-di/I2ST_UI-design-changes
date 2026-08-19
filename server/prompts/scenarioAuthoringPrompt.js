@@ -2,7 +2,8 @@ export function scenarioAuthoringInstructions({ repairContext = null } = {}) {
   return [
     "You create workplace roleplay scenario packets for a training UI before the packet is passed to a separate chatbot.",
     "This request is create-from-selections mode: no source curriculum PDF scenario is selected and no PDF source should be attributed.",
-    "Use the selected role, competency, scenario factors, complexities, behavior notes, and other details as requirements.",
+    "Use the performance objective, structured setting/background/trigger/challenge, selected role, competency, scenario factors, complexities, behavior notes, and other details as requirements.",
+    "Use the decision map and success criteria to keep the generated case capable of supporting the intended evaluation, but do not expose rubric language or expected answers in the in-world scenario.",
     "Use persona controls only to shape title/opening/fact tone; do not rewrite or reinterpret the persona summary.",
     "Do not create or include a character name. The authoring server assigns the chatbot character name from local name data after this packet is returned.",
     "Do not put names into title, summary, opening_line, or public_facts unless the user wrote a name in the free-text details.",

@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { SourceStep } from "./steps/SourceStep.jsx";
 import { RoleFocusStep } from "./steps/RoleFocusStep.jsx";
 import { DetailsStep } from "./steps/DetailsStep.jsx";
+import { EvaluationStep } from "./steps/EvaluationStep.jsx";
 import { PersonaStep } from "./steps/PersonaStep.jsx";
 import { ReviewStep } from "./steps/ReviewStep.jsx";
 import { ScenarioPreviewPanel } from "./ScenarioPreviewPanel.jsx";
@@ -12,6 +13,7 @@ export const STEPS = [
   { key: "source", label: "Source" },
   { key: "kpa-focus", label: "KPA Focus" },
   { key: "details", label: "Details" },
+  { key: "evaluation", label: "Evaluation" },
   { key: "persona", label: "Chatbot" },
   { key: "review", label: "Review" },
 ];
@@ -55,10 +57,19 @@ export function ScenarioWizard({
     setActiveStageIndex((current) => Math.min(current, stages.length - 1));
   }, [stages.length]);
 
-  const kpaFocusValid = competencies.length > 0;
-  const detailsValid = isManualSource || form.scenarioFactors.length > 0;
+  const kpaFocusValid = competencies.length > 0 && Boolean(form.performanceObjective.trim());
+  const detailsValid = isManualSource || (
+    form.scenarioFactors.length > 0 &&
+    [form.scenarioSetting, form.scenarioBackground, form.scenarioTrigger, form.scenarioChallenge].every((value) => value.trim())
+  );
+  const evaluationValid =
+    form.decisionPoints.some((point) => point.cue.trim() && point.learnerBehavior.trim() && point.consequence.trim()) &&
+    form.successCriteria.filter((criterion) => criterion.description.trim() && criterion.kpa).length >= 2 &&
+    form.evidenceMethods.length > 0 &&
+    (!form.evidenceMethods.includes("Other") || Boolean(form.evidenceOther.trim())) &&
+    form.debriefQuestions.filter((value) => value.trim()).length >= 2;
   const personaValid = stages.every(stagePersonaComplete);
-  const canAdvanceFrom = { 0: true, 1: kpaFocusValid, 2: detailsValid, 3: personaValid, 4: true };
+  const canAdvanceFrom = { 0: true, 1: kpaFocusValid, 2: detailsValid, 3: evaluationValid, 4: personaValid, 5: true };
   const visibleSteps = wizardStepsForMode(creationMode);
   const currentPosition = Math.max(0, visibleSteps.findIndex((item) => item.index === step));
   const isLastStep = currentPosition === visibleSteps.length - 1;
@@ -78,9 +89,10 @@ export function ScenarioWizard({
         <section className="wizardBuilderColumn">
           <div className="wizardCard">
             {step === 0 && <SourceStep updateForm={updateForm} catalog={catalog} source={source} />}
-            {step === 1 && <RoleFocusStep updateForm={updateForm} competencies={competencies} />}
+            {step === 1 && <RoleFocusStep form={form} updateForm={updateForm} competencies={competencies} />}
             {step === 2 && <DetailsStep form={form} updateForm={updateForm} isManualSource={isManualSource} />}
-            {step === 3 && (
+            {step === 3 && <EvaluationStep form={form} updateForm={updateForm} competencies={competencies} />}
+            {step === 4 && (
               <PersonaStep
                 form={form}
                 updateForm={updateForm}
@@ -88,7 +100,7 @@ export function ScenarioWizard({
                 setActiveStageIndex={setActiveStageIndex}
               />
             )}
-            {step === 4 && (
+            {step === 5 && (
               <ReviewStep
                 scenario={scenario}
                 isManualSource={isManualSource}

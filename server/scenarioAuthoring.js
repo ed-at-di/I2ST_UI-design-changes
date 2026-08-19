@@ -282,6 +282,10 @@ function inferExpectedAvatarGender(payload, sourceRow = null, generated = null) 
     generated?.opening_line,
     ...(Array.isArray(generated?.public_facts) ? generated.public_facts : []),
     payload.otherDetails,
+    payload.scenarioSetting,
+    payload.scenarioBackground,
+    payload.scenarioTrigger,
+    payload.scenarioChallenge,
   ]
     .map(clean)
     .join(" ")
@@ -531,6 +535,7 @@ function deterministicScenario(payload, sourceRow) {
   const focus = values(payload.competencyFocuses).join(", ") || clean(payload.competencyFocus) || "workplace conversation";
   const sourceText = clean(sourceRow?.scenario_text);
   const otherDetails = clean(payload.otherDetails);
+  const structuredDetails = [payload.scenarioSetting, payload.scenarioBackground, payload.scenarioTrigger, payload.scenarioChallenge].map(clean).filter(Boolean);
   const title = `${role}: ${clean(sourceRow?.subcategory || sourceRow?.category || "Workplace Concern")}`;
   const assignedName = assignAvatarName(payload, sourceRow);
   return {
@@ -538,9 +543,9 @@ function deterministicScenario(payload, sourceRow) {
     title,
     avatar_name: assignedName.name,
     role,
-    summary: [sourceText, `Role: ${role}.`, `Training focus: ${focus}.`, otherDetails].filter(Boolean).join(" "),
+    summary: [sourceText, ...structuredDetails, `Role: ${role}.`, `Training focus: ${focus}.`, otherDetails].filter(Boolean).join(" "),
     opening_line: "Hi, I wanted to talk about something that happened.",
-    public_facts: [sourceText, otherDetails].filter(Boolean),
+    public_facts: [sourceText, ...structuredDetails, otherDetails].filter(Boolean),
     source: "i2st_ui_source_library",
     category: factors.join("|"),
     subcategory: complexities.join("|"),

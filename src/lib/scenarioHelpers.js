@@ -145,12 +145,14 @@ export function previewFromFormOrScenario(scenario, form, source) {
     return {
       chatbotRole: "",
       competencyFocus: "",
+      performanceObjective: "",
       scenarioFactors: "",
       scenarioComplexities: "",
       sourceScenario: "",
       avatarName: "",
       personaDetails: "",
       otherDetails: "",
+      evaluationSummary: "",
       scenarioTitle: "",
       scenarioSummary: "",
       inContextPersonaSummary: "",
@@ -174,12 +176,14 @@ export function previewFromFormOrScenario(scenario, form, source) {
     return {
       chatbotRole: scenario.role || "",
       competencyFocus: "",
+      performanceObjective: "",
       scenarioFactors: "",
       scenarioComplexities: "",
       sourceScenario: "",
       avatarName: scenario.avatar_name || "Avatar",
       personaDetails,
       otherDetails: "",
+      evaluationSummary: "",
       scenarioTitle: scenario.title || "",
       scenarioSummary: "",
       inContextPersonaSummary: [scenario.role, persona.style, persona.emotional_state, persona.trust_level, persona.communication_style, persona.primary_concern]
@@ -223,17 +227,23 @@ export function previewFromFormOrScenario(scenario, form, source) {
   return {
     chatbotRole: scenario.role || formValue(form, "chatbotRole", "chatbotRoleOther"),
     competencyFocus: `${competencies.join(", ") || "None"}\n(${competencyDetails(competencies).join(", ") || "No details"})`,
+    performanceObjective: form.performanceObjective || "None",
     scenarioFactors: factorList.join(", ") || "None",
     scenarioComplexities: complexityList.join(", ") || "None",
     sourceScenario: sourceText,
     avatarName: scenario.avatar_name || "Avatar",
     personaDetails,
     otherDetails: form.otherDetails || "None",
+    evaluationSummary: `${form.successCriteria.filter((criterion) => clean(criterion.description) && clean(criterion.kpa)).length} success criteria · ${form.decisionPoints.filter((point) => clean(point.cue) && clean(point.learnerBehavior) && clean(point.consequence)).length} decision points · ${form.debriefQuestions.filter((value) => clean(value)).length} debrief questions`,
     scenarioTitle: scenario.title || `${formValue(form, "chatbotRole", "chatbotRoleOther")}: Workplace Concern`,
     scenarioSummary:
       scenario.summary ||
       [
         clean(source?.scenario_text),
+        form.scenarioSetting ? `Setting: ${clean(form.scenarioSetting)}.` : "",
+        form.scenarioBackground ? `Background: ${clean(form.scenarioBackground)}.` : "",
+        form.scenarioTrigger ? `Trigger: ${clean(form.scenarioTrigger)}.` : "",
+        form.scenarioChallenge ? `Challenge: ${clean(form.scenarioChallenge)}.` : "",
         `Role: ${formValue(form, "chatbotRole", "chatbotRoleOther")}.`,
         `Training focus: ${competencies.join(", ") || "workplace conversation"}.`,
         `Factors: ${factorList.join(", ") || "not specified"}.`,
@@ -323,10 +333,26 @@ export function writeScenarioWorkbook(XLSX, scenario) {
     { kind: "title", cells: ["Scenario Record", ""] },
     { group: "scenario", cells: ["Chatbot Role", scenario.role || ""] },
     { group: "scenario", cells: ["Key Performance Areas Focus", primaryFocus] },
+    { group: "scenario", cells: ["Performance Objective", payload.performanceObjective || "None"] },
     { group: "scenario", cells: ["Scenario Factors", factorText] },
     { group: "scenario", cells: ["Scenario Complexities", complexityText] },
+    { group: "scenario", cells: ["Setting", payload.scenarioSetting || "None"] },
+    { group: "scenario", cells: ["Background", payload.scenarioBackground || "None"] },
+    { group: "scenario", cells: ["Trigger", payload.scenarioTrigger || "None"] },
+    { group: "scenario", cells: ["Challenge", payload.scenarioChallenge || "None"] },
     ...(isSourceLibraryScenario ? [{ group: "scenario", cells: ["Source Curriculum Scenario", sourceText] }] : []),
     { group: "scenario", cells: ["Other Details", payload.otherDetails || "None"] },
+    {
+      group: "evaluation",
+      cells: [
+        "Decision & Evidence Map",
+        (payload.decisionPoints || []).map((point, index) => `${index + 1}. Cue: ${clean(point.cue)}\nLearner behavior: ${clean(point.learnerBehavior)}\nConsequence/evidence: ${clean(point.consequence)}`).join("\n\n") || "None",
+      ],
+    },
+    { group: "evaluation", cells: ["Success Criteria", (payload.successCriteria || []).filter((criterion) => clean(criterion.description)).map((criterion, index) => `${index + 1}. ${clean(criterion.description)}\nKPA: ${clean(criterion.kpa) || "Not assigned"}`).join("\n\n") || "None"] },
+    { group: "evaluation", cells: ["Evidence to Capture", selectedList(payload.evidenceMethods || [], payload.evidenceOther).join("\n") || "None"] },
+    { group: "evaluation", cells: ["Critical Errors or Omissions", (payload.criticalErrors || []).map(clean).filter(Boolean).map((value, index) => `${index + 1}. ${value}`).join("\n") || "None"] },
+    { group: "evaluation", cells: ["Debrief Questions", (payload.debriefQuestions || []).map(clean).filter(Boolean).map((value, index) => `${index + 1}. ${value}`).join("\n") || "None"] },
     { group: "persona", cells: ["Chatbot Character", scenario.avatar_name || ""] },
     { group: "persona", cells: ["Persona Inputs", personaDetails] },
     { group: "summary", kind: "boxed", cells: ["Scenario Title", scenario.title || ""] },
@@ -345,6 +371,7 @@ export function writeScenarioWorkbook(XLSX, scenario) {
       const groupColors = {
         scenario: { label: "EAF7FB", value: "F6FCFE" },
         persona: { label: "FCEAEA", value: "FFF7F7" },
+        evaluation: { label: "FFF0D2", value: "FFFAF0" },
         summary: { label: "EAF7EC", value: "F7FFF8" },
       };
       const colors = groupColors[row.group] || groupColors.scenario;

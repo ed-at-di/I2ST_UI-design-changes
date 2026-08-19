@@ -125,6 +125,12 @@ function buildScenario(payload, generatedRows, curriculumRows) {
   const sourceText = clean(source?.scenario_text);
   const summary =
     sourceText ||
+    [
+      clean(payload.scenarioSetting),
+      clean(payload.scenarioBackground),
+      clean(payload.scenarioTrigger),
+      clean(payload.scenarioChallenge),
+    ].filter(Boolean).join(" ") ||
     clean(seed.scenario_summary) ||
     `${role} reports a workplace concern involving ${factors.join(", ") || "professional conduct"} and wants a clear, fair response.`;
   const title =
@@ -147,6 +153,7 @@ function buildScenario(payload, generatedRows, curriculumRows) {
     behavior_notes: clean(payload.chatbotBehaviorNotes || seed.behavior_notes),
   };
   const publicFacts = sourceText ? [sourceText] : splitPipe(seed.public_facts);
+  [payload.scenarioSetting, payload.scenarioBackground, payload.scenarioTrigger, payload.scenarioChallenge].map(clean).filter(Boolean).forEach((value) => publicFacts.push(value));
   if (payload.otherDetails) publicFacts.push(clean(payload.otherDetails));
 
   return {

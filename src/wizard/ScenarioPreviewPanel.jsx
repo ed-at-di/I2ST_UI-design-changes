@@ -52,6 +52,7 @@ export function ScenarioPreviewPanel({
   const sourceSectionRef = useRef(null);
   const kpaSectionRef = useRef(null);
   const detailsSectionRef = useRef(null);
+  const evaluationSectionRef = useRef(null);
   const chatbotSectionRef = useRef(null);
   const outputSectionRef = useRef(null);
 
@@ -61,8 +62,9 @@ export function ScenarioPreviewPanel({
       0: sourceSectionRef.current,
       1: kpaSectionRef.current,
       2: detailsSectionRef.current,
-      3: chatbotSectionRef.current,
-      4: outputSectionRef.current,
+      3: evaluationSectionRef.current,
+      4: chatbotSectionRef.current,
+      5: outputSectionRef.current,
     };
     const activeSection = sectionByStep[wizardStep];
     if (!previewBody || !activeSection || previewBody.scrollHeight <= previewBody.clientHeight) return;
@@ -127,11 +129,16 @@ export function ScenarioPreviewPanel({
             </p>
           </PreviewBlock>
 
-          <PreviewBlock label="KPA Focus" complete={Boolean(competencies.length)} sectionRef={kpaSectionRef}>
+          <PreviewBlock label="KPA Focus & Objective" complete={Boolean(competencies.length && form.performanceObjective.trim())} sectionRef={kpaSectionRef}>
+            <p className={form.performanceObjective ? "" : "livePreviewEmpty"}>{form.performanceObjective || "Add a performance objective."}</p>
             <TagList values={competencies} emptyText="Add at least one Key Performance Area." />
           </PreviewBlock>
 
-          <PreviewBlock label="Scenario Details" complete={isManualSource || Boolean(factors.length || complexities.length)} sectionRef={detailsSectionRef}>
+          <PreviewBlock
+            label="Scenario Details"
+            complete={isManualSource || Boolean(factors.length && form.scenarioSetting.trim() && form.scenarioBackground.trim() && form.scenarioTrigger.trim() && form.scenarioChallenge.trim())}
+            sectionRef={detailsSectionRef}
+          >
             {isManualSource ? (
               <p>Details are inherited from the selected curriculum scenario.</p>
             ) : (
@@ -140,7 +147,29 @@ export function ScenarioPreviewPanel({
                 <TagList values={complexities} emptyText="No additional complexities selected." />
               </>
             )}
+            {[
+              ["Setting", form.scenarioSetting],
+              ["Background", form.scenarioBackground],
+              ["Trigger", form.scenarioTrigger],
+              ["Challenge", form.scenarioChallenge],
+            ].map(([label, value]) => value && <p className="livePreviewLabeledItem" key={label}><strong>{label}:</strong> {value}</p>)}
             {form.otherDetails && <p className="livePreviewNote">{form.otherDetails}</p>}
+          </PreviewBlock>
+
+          <PreviewBlock
+            label="Evaluation"
+            complete={Boolean(
+              form.decisionPoints.some((point) => point.cue.trim() && point.learnerBehavior.trim() && point.consequence.trim()) &&
+              form.successCriteria.filter((criterion) => criterion.description.trim() && criterion.kpa).length >= 2 &&
+              form.evidenceMethods.length &&
+              (!form.evidenceMethods.includes("Other") || form.evidenceOther.trim()) &&
+              form.debriefQuestions.filter((value) => value.trim()).length >= 2
+            )}
+            sectionRef={evaluationSectionRef}
+          >
+            <strong>{form.successCriteria.filter((criterion) => criterion.description.trim() && criterion.kpa).length || 0} success criteria</strong>
+            <TagList values={form.evidenceMethods} emptyText="Choose at least one evidence method." />
+            <p>{form.decisionPoints.filter((point) => point.cue.trim() && point.learnerBehavior.trim() && point.consequence.trim()).length} mapped decision points · {form.debriefQuestions.filter((value) => value.trim()).length} debrief questions</p>
           </PreviewBlock>
 
           <PreviewBlock label="Scenario Output" complete={Boolean(scenario)} sectionRef={outputSectionRef}>

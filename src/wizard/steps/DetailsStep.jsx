@@ -9,9 +9,35 @@ export function DetailsStep({ form, updateForm, isManualSource }) {
       <h2>Scenario Details</h2>
       <p className="wizardStepIntro">
         {isManualSource
-          ? "These scenario factors and complexities only apply when creating a scenario from selections, so this step is limited to optional notes while a source library scenario is selected."
-          : "Layer in the workplace factors and complexities this scenario should reflect."}
+          ? "The source supplies the base scenario. Use these fields when you need to clarify or adapt its shared setting, background, trigger, or challenge."
+          : "Define the shared situation first, then layer in the workplace factors and purposeful complexities it should reflect."}
       </p>
+
+      <div className="studioGroup scenarioStructureSection">
+        <span className="studioLabel">Scenario Structure</span>
+        <div className="scenarioStructureGrid">
+          <label className="studioField">
+            <span className="studioLabel">Setting{!isManualSource && "*"}</span>
+            <textarea value={form.scenarioSetting} onChange={(event) => updateForm({ scenarioSetting: event.target.value })} placeholder="Where and when does this take place?" />
+            <InfoNote>{FIELD_INFO.scenarioSetting}</InfoNote>
+          </label>
+          <label className="studioField">
+            <span className="studioLabel">Background{!isManualSource && "*"}</span>
+            <textarea value={form.scenarioBackground} onChange={(event) => updateForm({ scenarioBackground: event.target.value })} placeholder="What does the learner know at the outset?" />
+            <InfoNote>{FIELD_INFO.scenarioBackground}</InfoNote>
+          </label>
+          <label className="studioField">
+            <span className="studioLabel">Trigger{!isManualSource && "*"}</span>
+            <textarea value={form.scenarioTrigger} onChange={(event) => updateForm({ scenarioTrigger: event.target.value })} placeholder="What starts the interaction?" />
+            <InfoNote>{FIELD_INFO.scenarioTrigger}</InfoNote>
+          </label>
+          <label className="studioField">
+            <span className="studioLabel">Challenge{!isManualSource && "*"}</span>
+            <textarea value={form.scenarioChallenge} onChange={(event) => updateForm({ scenarioChallenge: event.target.value })} placeholder="What makes the situation difficult or consequential?" />
+            <InfoNote>{FIELD_INFO.scenarioChallenge}</InfoNote>
+          </label>
+        </div>
+      </div>
 
       {!isManualSource && (
         <div className="studioGroup generatedInputsSection">
