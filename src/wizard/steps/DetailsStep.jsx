@@ -19,7 +19,7 @@ function generatedStructure(domainType, militaryBranch, stages) {
   const setting = domainType === "Military"
     ? `${militaryBranch || "Military"} installation or command workplace`
     : "Civilian organization or federal workplace";
-  const stageRoles = roleList.length ? roleList.join(", ") : `${stages.length} stage avatar${stages.length === 1 ? "" : "s"}`;
+  const stageRoles = roleList.length ? roleList.join(", ") : `${stages.length} scenario character${stages.length === 1 ? "" : "s"}`;
   return {
     scenarioSetting: setting,
     scenarioBackground: `A ${domainType.toLowerCase()} workplace scenario involving ${stageRoles}. Character titles and contextual details should match this domain.`,
@@ -95,27 +95,28 @@ export function DetailsStep({ form, updateForm, isManualSource }) {
   return (
     <div className="wizardStepBody">
       <h2>Scenario Setup</h2>
-      <p className="wizardStepIntro">Set the stages, avatar roles, and domain first. The shared scenario structure will be populated automatically from these selections.</p>
+      <p className="wizardStepIntro">Set the character calls and domain first. The shared scenario structure will be populated automatically from these selections.</p>
 
       <div className="studioGroup scenarioSetupSection">
         <div className="stageSetupHeader">
-          <span className="studioLabel">Stages &amp; Avatar Roles <InfoNote>{FIELD_INFO.scenarioParticipants}</InfoNote></span>
-          {stages.length < 3 && <button className="secondaryButton compactActionButton" type="button" onClick={addStage}><Plus size={15} /><span>Add Stage</span></button>}
+          <span className="studioLabel">Characters &amp; Call Order <InfoNote>{FIELD_INFO.scenarioParticipants}</InfoNote></span>
+          {stages.length < 3 && <button className="secondaryButton compactActionButton" type="button" onClick={addStage}><Plus size={15} /><span>Add Character</span></button>}
         </div>
         <div className="scenarioParticipantGrid">
           {stages.map((stage, index) => (
             <div className="scenarioParticipantCard" key={stage.id}>
               <div className="scenarioParticipantCardHeader">
-                <strong>Stage {index + 1}</strong>
-                {stages.length > 1 && <button className="removeStageButton" type="button" onClick={() => removeStage(index)} aria-label={`Remove Stage ${index + 1}`} title={`Remove Stage ${index + 1}`}><Trash2 size={15} /></button>}
+                <strong>Call {index + 1}</strong>
+                {index === 0 && <small>Required complainant</small>}
+                {stages.length > 1 && index > 0 && <button className="removeStageButton" type="button" onClick={() => removeStage(index)} aria-label={`Remove character ${index + 1}`} title={`Remove character ${index + 1}`}><Trash2 size={15} /></button>}
               </div>
               <label className="studioField compactField">
                 <span>Role*</span>
-                <SelectControl value={stage.chatbotRole} onChange={(event) => updateStage(index, { chatbotRole: event.target.value })}>
+                <SelectControl value={stage.chatbotRole} onChange={(event) => updateStage(index, { chatbotRole: event.target.value })} disabled={index === 0}>
                   <option value="" disabled>Select a role</option>
                   {CHATBOT_ROLES.map((role) => {
                     const selectedStage = stageUsingRole(role, index);
-                    return <option key={role} value={role} disabled={selectedStage >= 0}>{role}{selectedStage >= 0 ? ` — Stage ${selectedStage + 1}` : ""}</option>;
+                    return <option key={role} value={role} disabled={selectedStage >= 0}>{role}{selectedStage >= 0 ? ` — Call ${selectedStage + 1}` : ""}</option>;
                   })}
                 </SelectControl>
               </label>
@@ -151,7 +152,7 @@ export function DetailsStep({ form, updateForm, isManualSource }) {
         <span className="studioLabel">Generated Scenario Structure <InfoNote>{FIELD_INFO.generatedScenarioStructure}</InfoNote></span>
         <div className="generatedStructureGrid">
           {[["Setting", form.scenarioSetting], ["Background", form.scenarioBackground], ["Trigger", form.scenarioTrigger], ["Challenge", form.scenarioChallenge]].map(([label, value]) => (
-            <div className="generatedStructureCard" key={label}><strong>{label}</strong><p>{value || "Complete the stage and domain selections above."}</p></div>
+            <div className="generatedStructureCard" key={label}><strong>{label}</strong><p>{value || "Complete the character and domain selections above."}</p></div>
           ))}
         </div>
       </div>

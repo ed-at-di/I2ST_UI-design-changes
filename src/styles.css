@@ -1,7 +1,7 @@
 :root {
   --layout-gap: 32px;
   --surface-radius: 14px;
-  --site-max-width: 1920px;
+  --site-max-width: 1440px;
   color-scheme: light;
   color: #18202a;
   background: #f4f6f8;
@@ -1018,6 +1018,7 @@ input[type="radio"] {
 .scenarioParticipantCard { padding: 14px; display: grid; gap: 10px; border: 1px solid #dce5e9; border-radius: 8px; background: #fff; }
 .scenarioParticipantCard > strong { color: #26333e; font-size: 14px; }
 .scenarioParticipantCardHeader > strong { color: #26333e; font-size: 14px; }
+.scenarioParticipantCardHeader > small { color: #087f92; font-size: 11px; font-weight: 850; text-transform: uppercase; }
 .removeStageButton { width: 30px; height: 30px; display: inline-grid; place-items: center; border: 1px solid #d7e1e5; border-radius: 7px; background: #fff; color: #7c8992; cursor: pointer; }
 .removeStageButton:hover { border-color: #e5a1a1; background: #fff5f5; color: #b84b4b; }
 .assignedDomainTitle { margin: 0; padding-top: 8px; display: grid; gap: 2px; border-top: 1px solid #e2e8eb; }
@@ -1483,7 +1484,6 @@ textarea:focus {
 }
 
 .runtimeScreen {
-  --runtime-composer-height: 190px;
   position: fixed;
   inset: 78px 0 0;
   min-height: 0;
@@ -1491,9 +1491,9 @@ textarea:focus {
   display: grid;
   grid-template-rows: minmax(0, 1fr);
   gap: 14px;
-  padding: 16px 16px calc(var(--runtime-composer-height) + 16px);
+  padding: 16px;
   background: #f5f6f8;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .runtimeScreen.hasError {
@@ -1511,20 +1511,25 @@ textarea:focus {
 }
 
 .runtimeExperience {
+  position: relative;
   min-height: 0;
-  height: 100%;
+  min-height: 100%;
+  height: auto;
   display: grid;
-  grid-template-columns: minmax(280px, 340px) minmax(430px, 1fr) minmax(260px, 320px);
+  grid-template-columns: minmax(480px, 1fr) minmax(360px, 430px);
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: "avatar details";
   gap: 14px;
+  transition: grid-template-columns 0.2s ease;
 }
 
-.runtimeExperience.hideTranscript {
-  grid-template-columns: minmax(430px, 1fr) minmax(260px, 320px);
+.runtimeExperience.detailsClosed {
+  grid-template-columns: minmax(480px, calc(100% - 444px)) minmax(0, 1fr) 52px;
+  grid-template-areas: "avatar . details";
 }
 
-.runtimeTranscriptPanel,
-.runtimeAvatarFocus,
-.runtimeMindPanel {
+.runtimeAvatarMain,
+.runtimeDetailsDrawer {
   min-width: 0;
   min-height: 0;
   height: 100%;
@@ -1534,15 +1539,62 @@ textarea:focus {
   overflow: hidden;
 }
 
-.runtimeTranscriptPanel {
+.runtimeDetailsDrawer {
+  grid-area: details;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
 }
 
-.runtimeMindPanel {
+.runtimeDetailsToggle {
+  min-height: 52px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 0;
+  border-bottom: 1px solid #d7e1e5;
+  background: #f7fafb;
+  color: #253340;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.runtimeDetailsToggle:hover {
+  background: #eef7f8;
+  color: #078da2;
+}
+
+.detailsClosed .runtimeDetailsToggle {
+  width: 100%;
+  height: auto;
+  min-height: 52px;
+  justify-content: center;
+  padding: 12px;
+  border-bottom: 1px solid #d7e1e5;
+}
+
+.detailsClosed .runtimeDetailsToggle span {
+  display: none;
+}
+
+.runtimeDetailsContent {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: minmax(260px, 0.9fr) minmax(260px, 1.1fr);
+  overflow: hidden;
+}
+
+.runtimeDetailsMind,
+.runtimeDetailsTranscript {
+  min-height: 0;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  overflow-y: auto;
+  overflow: hidden;
+}
+
+.runtimeDetailsMind {
+  border-bottom: 1px solid #d7e1e5;
 }
 
 .runtimePanelHeader {
@@ -1577,10 +1629,19 @@ textarea:focus {
 }
 
 .runtimeAvatarFocus {
+  grid-area: avatar;
+  align-self: start;
+  height: auto;
   display: grid;
-  grid-template-rows: auto auto minmax(260px, 1fr) auto;
-  background:
-    linear-gradient(180deg, #ffffff 0%, #f7fbfc 100%);
+  grid-template-columns: minmax(0, 1fr) clamp(210px, 22%, 270px);
+  align-items: start;
+  gap: 14px;
+}
+
+.runtimeAvatarMain {
+  display: grid;
+  grid-template-rows: auto auto auto;
+  background: linear-gradient(180deg, #ffffff 0%, #f7fbfc 100%);
 }
 
 .runtimeStageHeader {
@@ -1612,9 +1673,20 @@ textarea:focus {
   line-height: 1.2;
 }
 
-.runtimeStageHeader > span {
+.runtimeVisibilityControls {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.runtimeVisibilityControls button {
   flex: none;
   padding: 7px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   border: 1px solid #d9e1e5;
   border-radius: var(--surface-radius);
   background: #fbfcfd;
@@ -1623,60 +1695,149 @@ textarea:focus {
   font-weight: 900;
 }
 
+.runtimeVisibilityControls button:hover {
+  border-color: #7bcde0;
+  background: #eef9fa;
+}
+
 .runtimeStageSwitcher {
-  padding: 10px 12px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-  gap: 8px;
-  border-bottom: 1px solid #dbe5e8;
+  min-width: 0;
+  align-self: start;
+  padding: 14px 12px;
+  border: 1px solid #d7e1e5;
+  border-radius: var(--surface-radius);
   background: #f7fafb;
 }
 
-.runtimeStageSwitcher button {
-  min-width: 0;
-  min-height: 49px;
-  padding: 7px 10px;
+.runtimeCalendarHeading {
+  margin-bottom: 14px;
   display: grid;
-  align-content: center;
   gap: 2px;
+}
+
+.runtimeCalendarHeading span {
+  color: #078da2;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.runtimeCalendarHeading strong {
+  color: #26333e;
+  font-size: 15px;
+}
+
+.runtimeCalendarTimeline {
+  position: relative;
+  display: grid;
+}
+
+.runtimeCalendarTimeline::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 39px;
+  width: 1px;
+  background: #cbd8dd;
+}
+
+.runtimeCalendarSlot {
+  position: relative;
+  min-height: 112px;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.runtimeCalendarSlot > time {
+  padding-top: 4px;
+  color: #7a8791;
+  font-size: 10px;
+  font-weight: 800;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.runtimeCalendarSlot button {
+  position: relative;
+  min-width: 0;
+  height: 96px;
+  padding: 11px 12px 11px 15px;
+  display: grid;
+  align-content: start;
+  gap: 3px;
   border: 1px solid #cad8de;
   border-radius: 7px;
   background: #ffffff;
   color: #53636e;
   text-align: left;
+  overflow: hidden;
 }
 
-.runtimeStageSwitcher button:hover:not(:disabled) {
+.runtimeCalendarSlot button:hover:not(:disabled) {
   border-color: #66bdcd;
   background: #eef9fa;
 }
 
-.runtimeStageSwitcher button.active {
+.runtimeCalendarSlot button.active {
   border-color: #078da2;
-  background: #dff3f5;
+  background: #e7f6f8;
   color: #075f70;
+  box-shadow: 0 0 0 1px #078da2;
 }
 
-.runtimeStageSwitcher button:focus-visible {
+.runtimeCalendarSlot button.complete {
+  border-color: #93cbb8;
+  background: #edf9f3;
+  color: #167156;
+}
+
+.runtimeCalendarSlot button:focus-visible {
   outline: 3px solid rgba(7, 141, 162, 0.22);
   outline-offset: 2px;
 }
 
-.runtimeStageSwitcher span {
+.runtimeCalendarSlot button > span {
   font-size: 13px;
   font-weight: 900;
 }
 
-.runtimeStageSwitcher small {
+.runtimeCalendarSlot button small {
   overflow: hidden;
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 750;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.runtimeCalendarSlot button em {
+  margin-top: 3px;
+  color: #7a8791;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 750;
+}
+
+.runtimeMeetingProgress {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  background: rgba(7, 141, 162, 0.12);
+}
+
+.runtimeMeetingProgress b {
+  position: absolute;
+  inset: 0 0 auto;
+  border-radius: 0 0 4px 0;
+  background: #078da2;
+}
+
 .runtimeAvatarStage {
   position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
   min-height: 0;
   overflow: hidden;
   border-bottom: 1px solid #dbe5e8;
@@ -1811,15 +1972,9 @@ textarea:focus {
 }
 
 .runtimeComposerShell {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 70;
-  padding: 14px 32px calc(18px + env(safe-area-inset-bottom));
+  padding: 16px 20px 20px;
   border-top: 1px solid #d4dde2;
-  background: rgba(255, 255, 255, 0.97);
-  backdrop-filter: blur(14px);
+  background: #ffffff;
 }
 
 .runtimeSessionStrip {
@@ -1834,12 +1989,27 @@ textarea:focus {
   text-transform: uppercase;
 }
 
+.runtimeCallAdvance {
+  padding: 8px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid #a8d5c5;
+  border-radius: 7px;
+  background: #edf9f3;
+  color: #12664e;
+  font: inherit;
+  text-transform: none;
+}
+
+.runtimeCallAdvance:hover:not(:disabled) {
+  border-color: #68b697;
+  background: #dff3e9;
+}
+
 .runtimeComposer {
   padding: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 52px;
-  gap: 12px;
-  align-items: end;
+  display: block;
 }
 
 .runtimeDraftField {
@@ -1872,14 +2042,19 @@ textarea:focus {
 .runtimeDraftField textarea {
   min-height: 86px;
   max-height: 150px;
-  padding-right: 60px;
+  padding-right: 112px;
   border-radius: var(--surface-radius);
   resize: vertical;
 }
 
+.runtimeDraftField textarea:focus {
+  border-color: #0d94a9;
+  outline: none;
+}
+
 .voiceButton {
   position: absolute;
-  right: 10px;
+  right: 58px;
   bottom: 10px;
   width: 40px;
   min-height: 40px;
@@ -1888,6 +2063,16 @@ textarea:focus {
   border-radius: var(--surface-radius);
   background: #eaf0f2;
   color: #485965;
+}
+
+.runtimeDraftField .sendButton {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: var(--surface-radius);
 }
 
 .voiceButton.active {
@@ -2662,7 +2847,7 @@ textarea:focus {
 .livePreviewPanel {
   position: sticky;
   top: 90px;
-  max-height: calc(100vh - 94px);
+  height: calc(100vh - 94px);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   border: 1px solid #cfdde2;
@@ -2761,11 +2946,21 @@ textarea:focus {
   background: #f5f8f9;
 }
 
+.livePreviewScrollTail {
+  height: max(180px, calc(100% - 120px));
+  pointer-events: none;
+}
+
 .livePreviewSharedContent,
 .livePreviewChatbotSection {
   display: grid;
   align-content: start;
   gap: 12px;
+}
+
+.livePreviewSharedContent > .livePreviewBlock.active,
+.livePreviewChatbotSection.active {
+  order: -1;
 }
 
 .livePreviewChatbotSection {
@@ -2835,6 +3030,139 @@ textarea:focus {
   box-shadow: 0 0 0 2px rgba(123, 205, 224, 0.22);
 }
 
+.livePreviewBlock.navigable {
+  cursor: pointer;
+}
+
+.livePreviewBlock.navigable:hover {
+  border-color: #9fcbd4;
+  background: #fbfeff;
+}
+
+.livePreviewBlock.navigable:focus-visible {
+  outline: 3px solid rgba(7, 141, 162, 0.2);
+  outline-offset: 2px;
+}
+
+.kpaEmptyPrompt {
+  margin: 0;
+  padding: 14px;
+  border: 1px dashed #cfdde2;
+  border-radius: 8px;
+  color: #73818b;
+  background: #f8fafb;
+}
+
+.callLobbyScreen {
+  min-height: calc(100vh - 78px);
+  padding: 34px clamp(22px, 5vw, 72px) 72px;
+  background: #f4f7f8;
+}
+
+.callLobbyBack {
+  margin-bottom: 28px;
+  padding: 8px 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  color: #51616c;
+  font-weight: 800;
+}
+
+.callLobbyHero {
+  max-width: 900px;
+  margin: 0 auto 26px;
+  padding: 28px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 24px;
+  border: 1px solid #d6e1e5;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.callLobbyDateTile {
+  width: 88px;
+  overflow: hidden;
+  border: 1px solid #cbd9de;
+  border-radius: 12px;
+  background: #ffffff;
+  text-align: center;
+}
+
+.callLobbyDateTile span {
+  padding: 7px;
+  display: block;
+  background: #087f92;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.callLobbyDateTile strong {
+  padding: 10px;
+  display: block;
+  color: #1f2b36;
+  font-size: 34px;
+}
+
+.callLobbyEyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #087f92;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.callLobbyHero h1 { margin: 8px 0 6px; color: #17212b; font-size: 29px; }
+.callLobbyHero p { margin: 0; color: #66737f; line-height: 1.5; }
+
+.callAgenda {
+  max-width: 900px;
+  margin: 0 auto;
+  display: grid;
+  gap: 12px;
+}
+
+.callAgendaItem {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 22px;
+  border: 1px solid #d6e1e5;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.callAgendaItem.current { border: 1px solid #078da2; box-shadow: none; }
+.callAgendaItem.upcoming { opacity: .75; }
+.callAgendaItem.complete { border: 1px solid #93cbb8; background: #f7fbf9; }
+.callAgendaTime { display: flex; align-items: center; gap: 7px; color: #60707b; font-size: 13px; font-weight: 800; }
+.callAgendaIdentity { display: flex; align-items: center; gap: 14px; }
+.callAgendaAvatar { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 50%; background: #e8f5f7; color: #087f92; }
+.callAgendaIdentity small { color: #7b8993; font-weight: 800; text-transform: uppercase; }
+.callAgendaIdentity h2 { margin: 2px 0; color: #1f2b36; font-size: 20px; }
+.callAgendaIdentity p { margin: 0; color: #6b7882; font-size: 13px; }
+.callJoinButton { padding: 12px 16px; display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 8px; background: #087f92; color: #fff; font-weight: 900; }
+.callJoinButton:hover:not(:disabled) { background: #066f80; }
+.callUpcomingLabel { padding: 7px 10px; border-radius: 999px; background: #edf1f3; color: #66737f; font-size: 12px; font-weight: 900; }
+.callUpcomingLabel.complete { background: #dff3e9; color: #167156; }
+
+@media (max-width: 760px) {
+  .callLobbyHero { grid-template-columns: minmax(0, 1fr); }
+  .callLobbyDateTile { display: none; }
+  .callAgendaItem { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .callJoinButton { justify-content: center; }
+}
+
 .livePreviewBlockHeader {
   display: flex;
   align-items: center;
@@ -2873,6 +3201,24 @@ textarea:focus {
   color: #26333e;
   font-size: 14px;
   line-height: 1.4;
+}
+
+.livePreviewSectionTitle {
+  margin: 0;
+  color: #26333e;
+  font-size: 17px;
+  line-height: 1.35;
+}
+
+.livePreviewBlock .livePreviewCommaList {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: initial;
+}
+
+.livePreviewCommaList strong {
+  color: #4f5d68;
+  font-size: inherit;
 }
 
 .livePreviewBlock p {
@@ -3027,7 +3373,12 @@ textarea:focus {
 
   .livePreviewPanel {
     position: static;
+    height: auto;
     max-height: none;
+  }
+
+  .livePreviewScrollTail {
+    display: none;
   }
 
   .livePreviewBody {
@@ -3190,38 +3541,43 @@ textarea:focus {
   }
 
   .runtimeExperience,
-  .runtimeExperience.hideTranscript {
+  .runtimeExperience.detailsClosed {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       "avatar"
-      "mind"
-      "transcript";
-    grid-template-rows: minmax(520px, auto) minmax(360px, auto) minmax(360px, auto);
+      "details";
+    grid-template-rows: minmax(520px, auto) minmax(620px, auto);
     height: 100%;
     overflow-y: auto;
+  }
+
+  .runtimeExperience.detailsClosed {
+    grid-template-rows: minmax(520px, auto) 52px;
   }
 
   .runtimeAvatarFocus {
     grid-area: avatar;
     min-height: 520px;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .runtimeAvatarStage {
-    min-height: 300px;
+    min-height: 0;
   }
 
-  .runtimeTranscriptPanel {
-    grid-area: transcript;
-    min-height: 360px;
+  .runtimeDetailsDrawer {
+    grid-area: details;
+    min-height: 620px;
   }
 
-  .runtimeMindPanel {
-    grid-area: mind;
-    min-height: 360px;
+  .detailsClosed .runtimeDetailsDrawer {
+    min-height: 52px;
   }
 
-  .runtimeComposer {
-    grid-template-columns: minmax(0, 1fr) 50px;
+  .detailsClosed .runtimeDetailsToggle {
+    flex-direction: row;
+    justify-content: center;
+    padding: 0 16px;
   }
 
   .voiceButton {
@@ -3239,6 +3595,14 @@ textarea:focus {
 }
 
 @media (max-width: 480px) {
+  .wizardFooter .primaryButton,
+  .wizardFooter .secondaryButton {
+    width: 100%;
+    padding: 10px 12px;
+    white-space: normal;
+    text-align: center;
+  }
+
   .homeStatsRow {
     grid-template-columns: 1fr 1fr;
   }
@@ -3463,9 +3827,8 @@ textarea:focus {
 .appShell[data-theme="dark"] .livePreviewBlock,
 .appShell[data-theme="dark"] .decisionPointCard,
 .appShell[data-theme="dark"] .sourceScenarioDetail,
-.appShell[data-theme="dark"] .runtimeTranscriptPanel,
-.appShell[data-theme="dark"] .runtimeAvatarFocus,
-.appShell[data-theme="dark"] .runtimeMindPanel,
+.appShell[data-theme="dark"] .runtimeAvatarMain,
+.appShell[data-theme="dark"] .runtimeDetailsDrawer,
 .appShell[data-theme="dark"] .runtimeLiveResponse,
 .appShell[data-theme="dark"] .runtimeTypingLine {
   border-color: #294753;
@@ -3487,6 +3850,8 @@ textarea:focus {
 .appShell[data-theme="dark"] .livePreviewHeader,
 .appShell[data-theme="dark"] .livePreviewChatbotSection,
 .appShell[data-theme="dark"] .runtimePanelHeader,
+.appShell[data-theme="dark"] .runtimeDetailsToggle,
+.appShell[data-theme="dark"] .runtimeDetailsMind,
 .appShell[data-theme="dark"] .runtimeStageHeader,
 .appShell[data-theme="dark"] .runtimeStageSwitcher,
 .appShell[data-theme="dark"] .runtimeLiveResponse {
@@ -3495,6 +3860,11 @@ textarea:focus {
 
 .appShell[data-theme="dark"] .runtimeStageSwitcher {
   background: #0f2731;
+}
+
+.appShell[data-theme="dark"] .runtimeDetailsToggle {
+  background: #0f2731;
+  color: #dce7eb;
 }
 
 .appShell[data-theme="dark"] .runtimeStageSwitcher button {
@@ -3724,7 +4094,7 @@ textarea:focus {
   color: #8ed0b7;
 }
 
-.appShell[data-theme="dark"] .runtimeAvatarFocus {
+.appShell[data-theme="dark"] .runtimeAvatarMain {
   background: linear-gradient(180deg, #102b36 0%, #0a2029 100%);
 }
 

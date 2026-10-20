@@ -22,7 +22,7 @@ export function ReviewStep({
   return (
     <div className="wizardStepBody reviewStepBody">
       <h2>Review &amp; Launch</h2>
-      <p className="wizardStepIntro">Review the complete scenario and every stage persona, then start the chat when all selections are ready.</p>
+      <p className="wizardStepIntro">Review the complete scenario and every character persona, then continue to the call lobby.</p>
 
       {isExistingCopy && (
         <ExistingCopyBanner
@@ -47,7 +47,7 @@ export function ReviewStep({
         <div>
           <strong>{scenario ? "Scenario packet generated" : "Ready to generate and launch"}</strong>
           <p>
-            {scenario ? "The scenario summary and stage-specific chatbot selections are shown in the preview." : "Start Chat will generate the final packet with the completed stage personas and open the interview."}
+            {scenario ? "The scenario summary and character selections are shown in the preview." : "Continue to Call Lobby will generate the final packet and prepare the character calls."}
           </p>
           {status && <span>{status}</span>}
         </div>
@@ -60,7 +60,7 @@ export function ReviewStep({
         </button>
         <button className="primaryButton" type="button" onClick={onStartChat} disabled={busy || loading}>
           <Play size={16} />
-          <span>{scenario ? "Start Chat" : "Generate & Start Chat"}</span>
+          <span>{scenario ? "Continue to Call Lobby" : "Generate & Continue to Call Lobby"}</span>
         </button>
       </div>
     </div>

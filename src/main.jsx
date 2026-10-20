@@ -6,6 +6,7 @@ import { AppHeader } from "./components/AppHeader.jsx";
 import { HomeScreen } from "./screens/HomeScreen.jsx";
 import { LoginScreen } from "./screens/LoginScreen.jsx";
 import { AfterActionReviewScreen } from "./screens/AfterActionReviewScreen.jsx";
+import { CallLobbyScreen } from "./screens/CallLobbyScreen.jsx";
 import { ScenarioWizard, STEPS, wizardStepsForMode } from "./wizard/ScenarioWizard.jsx";
 import { COMPETENCY_OPTIONS, DEFAULT_FORM, NEW_SCENARIO_FORM } from "./data/scenarioOptions.js";
 import { demoApi, demoUiApi } from "./demo/demoApi.js";
@@ -79,9 +80,11 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [runtimeStageIndex, setRuntimeStageIndex] = useState(0);
   const [runtimeStageRuns, setRuntimeStageRuns] = useState({});
+  const [completedCallIndexes, setCompletedCallIndexes] = useState([]);
   const [input, setInput] = useState("");
-  const [view, setView] = useState("login"); // "login" | "home" | "wizard" | "runtime" | "aar"
+  const [view, setView] = useState("login"); // "login" | "home" | "wizard" | "lobby" | "runtime" | "aar"
   const [wizardStep, setWizardStep] = useState(0);
+  const [visitedWizardSteps, setVisitedWizardSteps] = useState(() => new Set([0]));
   const [creationMode, setCreationMode] = useState("new"); // "new" | "existing"
   const [existingOriginalName, setExistingOriginalName] = useState("");
   const [existingCopyName, setExistingCopyName] = useState("");
@@ -127,6 +130,11 @@ function App() {
     setSession(null);
     setMessages([]);
     setStatus("");
+  }
+
+  function navigateWizardStep(nextStep) {
+    setWizardStep(nextStep);
+    setVisitedWizardSteps((current) => new Set([...current, nextStep]));
   }
 
   async function loadCatalog() {
@@ -263,7 +271,7 @@ function App() {
       ...current,
       [stageIndex]: { session: result, messages: initialMessages },
     }));
-    setStatus(`Stage ${stageIndex + 1} started · ${formatLatency(result.latency_ms)}`);
+    setStatus(`Call ${stageIndex + 1} started · ${formatLatency(result.latency_ms)}`);
     setView("runtime");
 
     // Session startup should not be blocked by this secondary status refresh.
@@ -295,6 +303,52 @@ function App() {
     }
   }
 
+  async function openCallLobby() {
+    setBusy(true);
+    setError("");
+    try {
+      let selectedScenario = scenario;
+      if (!selectedScenario) {
+        selectedScenario = await requestScenarioPacket();
+        setScenario(selectedScenario);
+      }
+      if (!selectedScenario?.title && !selectedScenario?.scenario_id) {
+        throw new Error("The scenario could not be prepared for the call lobby.");
+      }
+      setSession(null);
+      setMessages([]);
+      setCompletedCallIndexes([]);
+      setView("lobby");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function joinScheduledCall(stageIndex) {
+    if (stageIndex === 0 && !runtimeStageRuns[0]) {
+      await startSession();
+      return;
+    }
+    await selectRuntimeStage(stageIndex);
+  }
+
+  function finishRuntimeCall() {
+    setRuntimeStageRuns((current) => ({
+      ...current,
+      [runtimeStageIndex]: { session, messages },
+    }));
+    setCompletedCallIndexes((current) => [...new Set([...current, runtimeStageIndex])]);
+    setInput("");
+    if (runtimeStageIndex >= activeScenarioStages(form).length - 1) {
+      endTrainingSession();
+    } else {
+      setStatus(`Call ${runtimeStageIndex + 1} completed`);
+      setView("lobby");
+    }
+  }
+
   async function selectRuntimeStage(nextStageIndex) {
     if (nextStageIndex === runtimeStageIndex || busy) return;
     setRuntimeStageRuns((current) => ({
@@ -309,7 +363,7 @@ function App() {
       setMessages(previousRun.messages);
       setInput("");
       setError("");
-      setStatus(`Returned to Stage ${nextStageIndex + 1}`);
+      setStatus(`Returned to Call ${nextStageIndex + 1}`);
       return;
     }
 
@@ -392,6 +446,7 @@ function App() {
     setMessages([]);
     setRuntimeStageIndex(0);
     setRuntimeStageRuns({});
+    setCompletedCallIndexes([]);
     setStatus("");
     setError("");
   }
@@ -404,6 +459,7 @@ function App() {
     setExistingCopySaved(false);
     setExistingCopyDirty(false);
     setWizardStep(1);
+    setVisitedWizardSteps(new Set([1]));
     setDraftActive(true);
     setView("wizard");
   }
@@ -414,24 +470,19 @@ function App() {
     setCreationMode("existing");
     prepareExistingCopy(sourceLabel(initialSource, catalog.curriculumScenarios));
     setWizardStep(0);
+    setVisitedWizardSteps(new Set([0]));
     setDraftActive(true);
     setView("wizard");
   }
 
   async function openAssignedScenario(item) {
     const activeScenario = scenarioFromCatalogItem(item);
-    setBusy(true);
     setError("");
     setMessages([]);
     setScenario(activeScenario);
     setDraftActive(false);
-    try {
-      await openChatSession(activeScenario);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setBusy(false);
-    }
+    setCompletedCallIndexes([]);
+    setView("lobby");
   }
 
   function updateExistingCopyName(value) {
@@ -458,6 +509,14 @@ function App() {
     loadCatalog();
   }
 
+  function returnFromCallLobby() {
+    if (draftActive) {
+      setView("wizard");
+      return;
+    }
+    returnHome();
+  }
+
   function endTrainingSession() {
     setInput("");
     setStatus("Training session ended");
@@ -480,6 +539,7 @@ function App() {
   function deleteDraft() {
     resetForm();
     setWizardStep(0);
+    setVisitedWizardSteps(new Set([0]));
     setDraftActive(false);
   }
 
@@ -535,6 +595,20 @@ function App() {
         stages={runtimeStages}
         activeStageIndex={runtimeStageIndex}
         onSelectStage={selectRuntimeStage}
+        completedCalls={completedCallIndexes}
+        onFinishCall={finishRuntimeCall}
+      />
+    );
+  } else if (view === "lobby" && scenario) {
+    body = (
+      <CallLobbyScreen
+        scenario={scenario}
+        characters={activeScenarioStages(form)}
+        completedCalls={completedCallIndexes}
+        busy={busy}
+        onJoin={joinScheduledCall}
+        onBack={returnFromCallLobby}
+        backLabel={draftActive ? "Back to scenario creation" : "Back to scenarios"}
       />
     );
   } else if (view === "aar" && session) {
@@ -552,7 +626,8 @@ function App() {
     body = (
       <ScenarioWizard
         step={wizardStep}
-        setStep={setWizardStep}
+        setStep={navigateWizardStep}
+        visitedSteps={visitedWizardSteps}
         form={form}
         updateForm={updateForm}
         catalog={catalog}
@@ -567,7 +642,7 @@ function App() {
         loading={loading}
         onRegenerate={generateScenario}
         onExport={exportScenarioExcel}
-        onStartChat={startSession}
+        onStartChat={openCallLobby}
         creationMode={creationMode}
         existingCopyName={existingCopyName}
         existingOriginalName={existingOriginalName}
@@ -602,7 +677,7 @@ function App() {
             view === "runtime" && session
               ? {
                   title: scenario?.title || scenario?.preview?.scenarioTitle || "Scenario session",
-                  stageLabel: `Stage ${runtimeStageIndex + 1} of ${activeScenarioStages(form).length} · ${(() => {
+                  stageLabel: `Call ${runtimeStageIndex + 1} of ${activeScenarioStages(form).length} · ${(() => {
                     const stage = activeScenarioStages(form)[runtimeStageIndex];
                     return (stage?.chatbotRole === "Other" ? stage.chatbotRoleOther : stage?.chatbotRole) || "Avatar";
                   })()}`,
@@ -624,7 +699,8 @@ function App() {
               ? {
                   steps: wizardStepsForMode(creationMode),
                   step: wizardStep,
-                  onStepChange: setWizardStep,
+                  visitedSteps: visitedWizardSteps,
+                  onStepChange: navigateWizardStep,
                   onExitToHome: returnHome,
                 }
               : undefined
@@ -636,4 +712,6 @@ function App() {
   );
 }
 
-createRoot(document.getElementById("root")).render(<App />);
+const appRoot = window.__i2stReactRoot || createRoot(document.getElementById("root"));
+window.__i2stReactRoot = appRoot;
+appRoot.render(<App />);

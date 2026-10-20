@@ -555,6 +555,57 @@ function deterministicScenario(payload, sourceRow) {
   };
 }
 
+function deterministicGeneratedScenario(payload, fallbackReason = "") {
+  const persona = personaFromPayload(payload);
+  const role = controlValue(payload, "chatbotRole", "chatbotRoleOther") || "Complainant";
+  const factors = values(payload.scenarioFactors, payload.otherFactor);
+  const complexities = values(payload.scenarioComplexities, payload.otherComplexity);
+  const focus = values(payload.competencyFocuses).join(", ") || clean(payload.competencyFocus) || clean(payload.selectedKpa) || "workplace communication";
+  const domain = [clean(payload.domainType), clean(payload.militaryBranch)].filter(Boolean).join(" — ");
+  const setting = clean(payload.scenarioSetting) || `${domain || "Civilian"} workplace`;
+  const background = clean(payload.scenarioBackground) || `A workplace concern involving ${factors.join(", ") || "an interpersonal conflict"}.`;
+  const trigger = clean(payload.scenarioTrigger) || "The character has asked to discuss what happened and what should happen next.";
+  const challenge = clean(payload.scenarioChallenge) || (complexities.length ? `The conversation includes ${complexities.join(", ").toLowerCase()}.` : "The character is unsure whether the concern will be taken seriously.");
+  const assignedName = assignAvatarName(payload, null);
+  const titleSubject = factors[0] || complexities[0] || "Workplace Concern";
+  const publicFacts = [
+    `Setting: ${setting}`,
+    background,
+    trigger,
+    challenge,
+    `Role: ${role}`,
+    `Assessment focus: ${focus}`,
+  ].filter(Boolean);
+
+  return {
+    scenario_id: `ui-local-${Date.now().toString(36)}-${slug(titleSubject)}`,
+    title: `${role}: ${titleSubject}`,
+    avatar_name: assignedName.name,
+    role,
+    summary: [background, trigger, challenge].filter(Boolean).join(" "),
+    opening_line: "Hi, I wanted to talk about something that happened at work.",
+    public_facts: publicFacts,
+    source: "i2st_ui_local_generation",
+    category: factors.join("|"),
+    subcategory: complexities.join("|"),
+    persona,
+    authoring: {
+      payload,
+      sourceContext: null,
+      generatedSeed: null,
+      generatedExamples: [],
+      missingFactors: [],
+      summaryWordCount: wordCount([background, trigger, challenge].filter(Boolean).join(" ")),
+      inContextPersonaSummary: inContextPersonaSummaryFromPayload(payload),
+      generatedBy: "local-fallback",
+      fallbackReason: clean(fallbackReason),
+      nameGeneration: assignedName.meta,
+      latency_ms: 0,
+      repair_count: 0,
+    },
+  };
+}
+
 const scenarioSchema = {
   type: "object",
   additionalProperties: false,
@@ -663,7 +714,12 @@ async function generateScenario(payload) {
   }
   const generatedSeed = findGeneratedSeed(payload, generatedRows);
   const generatedExamples = findGeneratedExamples(payload, generatedRows, generatedSeed);
-  let result = await callScenarioLlm(payload, generatedSeed, generatedExamples);
+  let result;
+  try {
+    result = await callScenarioLlm(payload, generatedSeed, generatedExamples);
+  } catch (error) {
+    return deterministicGeneratedScenario(payload, error.message);
+  }
   let generated = result.parsed;
   let repairCount = 0;
   let missingFactors = missingRequiredFactors(payload, generated);

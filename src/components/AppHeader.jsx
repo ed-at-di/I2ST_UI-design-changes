@@ -33,14 +33,15 @@ export function AppHeader({ wizardNavigation, runtimeSession, aarNavigation, the
         <nav className="appHeaderProgress" aria-label="Scenario creation progress">
           <ol className="wizardStepper">
             {wizardNavigation.steps.map((item, position) => {
-              const done = position < currentWizardPosition;
               const active = item.index === wizardNavigation.step;
+              const visited = wizardNavigation.visitedSteps?.has(item.index) ?? position <= currentWizardPosition;
+              const done = visited && !active;
               return (
                 <li key={item.key} className={`wizardStepperItem ${active ? "active" : ""} ${done ? "done" : ""}`}>
                   <button
                     className="wizardStepperTarget"
                     type="button"
-                    disabled={!done}
+                    disabled={!visited || active}
                     onClick={() => wizardNavigation.onStepChange(item.index)}
                     aria-current={active ? "step" : undefined}
                   >

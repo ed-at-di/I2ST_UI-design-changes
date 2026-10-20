@@ -1,12 +1,24 @@
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { Check, Copy, Layers3 } from "lucide-react";
 import { StageTabs } from "../components/StageTabs.jsx";
 import { formValue, selectedList, sourceLabel } from "../lib/scenarioHelpers.js";
 import { activeScenarioStages, personaValuesForStage, stagePersonaComplete } from "../lib/stageHelpers.js";
 
-function PreviewBlock({ label, complete, children, sectionRef, active = false }) {
+function PreviewBlock({ label, complete, children, sectionRef, active = false, onNavigate }) {
   return (
-    <section ref={sectionRef} className={`livePreviewBlock ${complete ? "complete" : ""} ${active ? "active" : ""}`}>
+    <section
+      ref={sectionRef}
+      className={`livePreviewBlock ${complete ? "complete" : ""} ${active ? "active" : ""} ${onNavigate ? "navigable" : ""}`}
+      onClick={onNavigate}
+      onKeyDown={(event) => {
+        if (onNavigate && (event.key === "Enter" || event.key === " ")) {
+          event.preventDefault();
+          onNavigate();
+        }
+      }}
+      role={onNavigate ? "button" : undefined}
+      tabIndex={onNavigate ? 0 : undefined}
+    >
       <div className="livePreviewBlockHeader">
         <span>{label}</span>
         <span className="livePreviewBlockStatus" aria-label={complete ? "Selection added" : "Not yet completed"}>
@@ -44,6 +56,8 @@ export function ScenarioPreviewPanel({
   wizardStep,
   activeStageIndex,
   setActiveStageIndex,
+  onNavigate,
+  visibleSteps = new Set(),
 }) {
   const factors = selectedList(form.scenarioFactors || [], form.otherFactor);
   const complexities = selectedList(form.scenarioComplexities || [], form.otherComplexity);
@@ -56,25 +70,14 @@ export function ScenarioPreviewPanel({
   const chatbotSectionRef = useRef(null);
   const outputSectionRef = useRef(null);
 
-  useEffect(() => {
-    const previewBody = previewBodyRef.current;
-    const sectionByStep = {
-      0: sourceSectionRef.current,
-      1: kpaSectionRef.current,
-      2: detailsSectionRef.current,
-      3: evaluationSectionRef.current,
-      4: chatbotSectionRef.current,
-      5: outputSectionRef.current,
-    };
-    const activeSection = sectionByStep[wizardStep];
-    if (!previewBody || !activeSection || previewBody.scrollHeight <= previewBody.clientHeight) return;
+  useLayoutEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const previewBody = previewBodyRef.current;
+      if (previewBody) previewBody.scrollTop = 0;
+    });
 
-    const bodyTop = previewBody.getBoundingClientRect().top;
-    const sectionTop = activeSection.getBoundingClientRect().top;
-    const nextScrollTop = previewBody.scrollTop + sectionTop - bodyTop;
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    previewBody.scrollTo({ top: nextScrollTop, behavior: reduceMotion ? "auto" : "smooth" });
-  }, [wizardStep, activeStageIndex]);
+    return () => window.cancelAnimationFrame(frame);
+  }, [wizardStep, activeStageIndex, visibleSteps]);
 
   const activeStage = stages[activeStageIndex];
   const activeRole = formValue(activeStage, "chatbotRole", "chatbotRoleOther");
@@ -82,13 +85,13 @@ export function ScenarioPreviewPanel({
   const activePersona = personaValuesForStage(activeStage);
   const sourceTitle = isManualSource
     ? sourceLabel(source, catalog.curriculumScenarios || [])
-    : "Create from selected building blocks";
-  const draftTitle = scenario?.title || scenarioName || (primaryRole ? `${primaryRole}: Workplace Concern` : "Untitled Scenario");
+    : "";
+  const draftTitle = scenario?.title || scenarioName || (primaryRole ? `${primaryRole}: Workplace Concern` : "New scenario preview");
   const draftSummary =
     scenario?.summary ||
     (isManualSource
       ? source?.scenario_text
-      : "The generated title, character, and scenario summary will appear here after the building blocks are reviewed.");
+      : "Complete the scenario builder to generate a summary here.");
   const stateLabel = scenario ? "Generated" : isExistingCopy ? (copySaved ? "Saved copy" : "Unsaved copy") : "Draft";
 
   return (
@@ -120,27 +123,31 @@ export function ScenarioPreviewPanel({
             </div>
           )}
 
-          <PreviewBlock label="Source" complete={Boolean(sourceTitle)} sectionRef={sourceSectionRef} active={wizardStep === 0}>
-            <strong>{sourceTitle}</strong>
+          {visibleSteps.has(0) && <PreviewBlock label="Source" complete={Boolean(sourceTitle)} sectionRef={sourceSectionRef} active={wizardStep === 0} onNavigate={isManualSource ? () => onNavigate?.(0) : undefined}>
+            <strong>{sourceTitle || "No source selected yet"}</strong>
             <p>
               {isManualSource
                 ? source?.scenario_text || "Select a curriculum scenario."
-                : "The scenario will be assembled from the training focus, shared details, and stage personas below."}
+                : "Start in Assessment to define what this scenario should assess."}
             </p>
-          </PreviewBlock>
+          </PreviewBlock>}
 
-          <PreviewBlock label="KPA & Focus Areas" complete={Boolean(form.selectedKpa && (form.competencyBehaviorFocuses || []).length)} sectionRef={kpaSectionRef} active={wizardStep === 1}>
-            {form.performanceObjective && <p>{form.performanceObjective}</p>}
-            <TagList values={form.selectedKpa ? [form.selectedKpa] : []} emptyText="Select a KPA." />
-            <TagList values={competencies} emptyText="Add at least one focus area." />
-            <TagList values={form.competencyBehaviorFocuses || []} emptyText="Choose at least one behavior to emphasize." />
-          </PreviewBlock>
+          {visibleSteps.has(1) && <PreviewBlock label="Assessment" complete={Boolean(form.selectedKpa && (form.competencyBehaviorFocuses || []).length)} sectionRef={kpaSectionRef} active={wizardStep === 1} onNavigate={() => onNavigate?.(1)}>
+            <h4 className="livePreviewSectionTitle">{form.selectedKpa || "Select a KPA"}</h4>
+            <p className={!competencies.length ? "livePreviewEmpty" : "livePreviewCommaList"}>
+              <strong>Focus areas:</strong> {competencies.join(", ") || "None selected yet"}
+            </p>
+            <p className={!(form.competencyBehaviorFocuses || []).length ? "livePreviewEmpty" : "livePreviewCommaList"}>
+              <strong>Behaviors:</strong> {(form.competencyBehaviorFocuses || []).join(", ") || "None selected yet"}
+            </p>
+          </PreviewBlock>}
 
-          <PreviewBlock
-            label="Scenario Details"
+          {visibleSteps.has(2) && <PreviewBlock
+            label="Scenario Builder"
             complete={Boolean(form.domainType && (form.domainType !== "Military" || form.militaryBranch) && stages.every((stage) => stage.chatbotRole) && (isManualSource || factors.length))}
             sectionRef={detailsSectionRef}
             active={wizardStep === 2}
+            onNavigate={() => onNavigate?.(2)}
           >
             {isManualSource ? (
               <p>Details are inherited from the selected curriculum scenario.</p>
@@ -151,9 +158,9 @@ export function ScenarioPreviewPanel({
               </>
             )}
             {form.domainType && <p className="livePreviewLabeledItem"><strong>Domain:</strong> {form.domainType}{form.militaryBranch ? ` — ${form.militaryBranch}` : ""}</p>}
-            <p className="livePreviewLabeledItem"><strong>Stages:</strong> {stages.map((stage, index) => {
+            <p className="livePreviewLabeledItem"><strong>Characters:</strong> {stages.map((stage, index) => {
               const role = stage.chatbotRole === "Other" ? stage.chatbotRoleOther : stage.chatbotRole;
-              return role ? `Stage ${index + 1}: ${role}` : "";
+              return role ? `Call ${index + 1}: ${role}` : "";
             }).filter(Boolean).join(" · ") || "Not configured"}</p>
             {[
               ["Setting", form.scenarioSetting],
@@ -162,44 +169,46 @@ export function ScenarioPreviewPanel({
               ["Challenge", form.scenarioChallenge],
             ].map(([label, value]) => value && <p className="livePreviewLabeledItem" key={label}><strong>{label}:</strong> {value}</p>)}
             {form.otherDetails && <p className="livePreviewNote">{form.otherDetails}</p>}
-          </PreviewBlock>
+          </PreviewBlock>}
 
-          <PreviewBlock
-            label="Evaluation"
+          {visibleSteps.has(3) && <PreviewBlock
+            label="Generate Scenario"
             complete={Boolean(scenario)}
             sectionRef={evaluationSectionRef}
             active={wizardStep === 3}
+            onNavigate={() => onNavigate?.(3)}
           >
             <strong>{form.decisionPoints.filter((point) => point.cue.trim() && point.learnerBehavior.trim() && point.consequence.trim()).length} mapped decision points</strong>
-            <p>{scenario ? "The shared scenario is ready for stage personas." : "Generate the shared scenario before continuing to Chatbot."}</p>
-          </PreviewBlock>
+            <p>{scenario ? "The shared scenario is ready for character personas." : "Generate the shared scenario before continuing to Characters."}</p>
+          </PreviewBlock>}
 
-          <PreviewBlock label="Scenario Summary" complete={Boolean(scenario)} sectionRef={outputSectionRef} active={wizardStep === 5}>
+          {visibleSteps.has(5) && <PreviewBlock label="Review" complete={Boolean(scenario)} sectionRef={outputSectionRef} active={wizardStep === 5} onNavigate={() => onNavigate?.(5)}>
             {scenario?.avatar_name && <strong>Character: {scenario.avatar_name}</strong>}
             <p className={!scenario ? "livePreviewEmpty" : ""}>{draftSummary}</p>
             {scenario && preview.inContextPersonaSummary && (
               <p className="livePreviewNote">{preview.inContextPersonaSummary}</p>
             )}
-          </PreviewBlock>
+          </PreviewBlock>}
         </div>
 
-        <section ref={chatbotSectionRef} className="livePreviewChatbotSection" aria-labelledby="live-preview-chatbot-heading">
-          <h3 id="live-preview-chatbot-heading">Chatbot</h3>
+        {visibleSteps.has(4) && <section ref={chatbotSectionRef} className={`livePreviewChatbotSection ${wizardStep === 4 ? "active" : ""}`} aria-label="Characters">
           <StageTabs
             stages={stages}
             activeStageIndex={activeStageIndex}
             onSelectStage={setActiveStageIndex}
-            label="Preview chatbot stage"
+            label="Preview scenario characters"
             variant="preview"
           />
 
-          <PreviewBlock label={`Stage ${activeStageIndex + 1} Persona`} complete={stagePersonaComplete(activeStage)} active={wizardStep === 4}>
-            <strong>{activeRole || `Choose a role for Stage ${activeStageIndex + 1}`}</strong>
-            <TagList values={activePersona} emptyText={`Stage ${activeStageIndex + 1} persona selections will appear here.`} />
+          <PreviewBlock label="Characters" complete={stagePersonaComplete(activeStage)} active={wizardStep === 4} onNavigate={() => onNavigate?.(4)}>
+            <strong>{activeRole || `Choose a role for Character ${activeStageIndex + 1}`}</strong>
+            <TagList values={activePersona} emptyText={`Character ${activeStageIndex + 1} persona selections will appear here.`} />
             {activeStage.chatbotBehaviorNotes && <p className="livePreviewNote">{activeStage.chatbotBehaviorNotes}</p>}
             {activeStage.personaNotes && <p className="livePreviewNote">{activeStage.personaNotes}</p>}
           </PreviewBlock>
-        </section>
+        </section>}
+
+        <div className="livePreviewScrollTail" aria-hidden="true" />
       </div>
     </aside>
   );

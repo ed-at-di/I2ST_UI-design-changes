@@ -74,13 +74,13 @@ export function PersonaStep({ form, updateForm, activeStageIndex, setActiveStage
         stages={stages}
         activeStageIndex={activeStageIndex}
         onSelectStage={setActiveStageIndex}
-        label="Scenario stages"
+        label="Scenario characters"
         idPrefix="stage-persona-tab"
         panelIdPrefix="stage-persona-panel"
       />
 
       <div className="personaStepHeading">
-        <div><h2>Stage Personas</h2><p className="wizardStepIntro">Choose the role and persona traits of the avatar for the selected stage.</p></div>
+        <div><h2>Character Personas</h2><p className="wizardStepIntro">Choose the role and persona traits for the selected character call.</p></div>
         <div className="personaGenerateActions">
           <button className="secondaryButton compactActionButton" type="button" onClick={generatePersona}><Dices size={15} /><span>Randomize</span></button>
           <button className="primaryButton compactActionButton" type="button" onClick={generatePersona}><Sparkles size={15} /><span>Generate Persona</span></button>
@@ -95,7 +95,7 @@ export function PersonaStep({ form, updateForm, activeStageIndex, setActiveStage
       >
         <div className="stagePersonaBuilderHeader">
           <div>
-            <span>Stage {activeStageIndex + 1}</span>
+            <span>Character {activeStageIndex + 1}</span>
             <h3>Role &amp; Persona Builder</h3>
           </div>
           <strong className={stagePersonaComplete(activeStage) ? "complete" : ""}>
@@ -105,7 +105,7 @@ export function PersonaStep({ form, updateForm, activeStageIndex, setActiveStage
         <div className="configuredRoleSummary">
           <span>Configured role</span>
           <strong>{activeStage.chatbotRole === "Other" ? activeStage.chatbotRoleOther : activeStage.chatbotRole}</strong>
-          <small>Participant roles are configured in Scenario Setup.</small>
+          <small>Character roles are configured in Scenario Builder.</small>
         </div>
         <div className="personaControlGrid">
           <PersonaSelect
@@ -161,12 +161,12 @@ export function PersonaStep({ form, updateForm, activeStageIndex, setActiveStage
         </div>
         <label className="studioField">
           <span className="studioLabel">Chatbot Behavior Notes <em>(optional)</em></span>
-          <textarea value={activeStage.chatbotBehaviorNotes} onChange={(event) => updateStage({ chatbotBehaviorNotes: event.target.value })} placeholder={`Optional behavior notes for how the chatbot should speak or react in Stage ${activeStageIndex + 1}`} />
+          <textarea value={activeStage.chatbotBehaviorNotes} onChange={(event) => updateStage({ chatbotBehaviorNotes: event.target.value })} placeholder={`Optional behavior notes for how this character should speak or react in Call ${activeStageIndex + 1}`} />
           <InfoNote>{FIELD_INFO.chatbotBehaviorNotes}</InfoNote>
         </label>
         <label className="studioField">
           <span className="studioLabel">Persona Notes <em>(optional)</em></span>
-          <textarea value={activeStage.personaNotes} onChange={(event) => updateStage({ personaNotes: event.target.value })} placeholder={`Optional persona details for Stage ${activeStageIndex + 1}`} />
+          <textarea value={activeStage.personaNotes} onChange={(event) => updateStage({ personaNotes: event.target.value })} placeholder={`Optional persona details for Character ${activeStageIndex + 1}`} />
           <InfoNote>{FIELD_INFO.personaNotes}</InfoNote>
         </label>
       </div>

@@ -50,7 +50,7 @@ export function EvaluationStep({ form, updateForm, competencies, scenario, busy,
       </div>
 
       <div className="scenarioGenerationCallout">
-        <div><strong>{scenario ? "Scenario generated" : "Generate the shared scenario"}</strong><p>Create the scenario after configuring the stages and avatar roles, then add stage-specific persona traits.</p></div>
+        <div><strong>{scenario ? "Scenario generated" : "Generate the shared scenario"}</strong><p>Create the scenario after configuring the character calls, then add persona traits for each character.</p></div>
         <button className="primaryButton" type="button" onClick={onGenerateScenario} disabled={busy}><Sparkles size={16} /><span>{busy ? "Generating..." : scenario ? "Regenerate Scenario" : "Generate Scenario"}</span></button>
       </div>
     </div>

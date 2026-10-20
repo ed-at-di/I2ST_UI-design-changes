@@ -31,16 +31,16 @@ export function StageTabs({
             onClick={() => onSelectStage(index)}
             key={stage.id}
           >
-            <span>Stage {index + 1}</span>
+            <span>Character {index + 1}</span>
             <small>{complete ? "Persona complete" : "Needs persona"}</small>
           </button>
         );
       })}
 
       {onAddStage && stages.length < maxStages && (
-        <button className="stageTabsAdd" type="button" onClick={onAddStage} aria-label={`Add Stage ${stages.length + 1}`}>
-          <span><Plus size={15} /> Add Stage</span>
-          <small>Optional next stage</small>
+        <button className="stageTabsAdd" type="button" onClick={onAddStage} aria-label={`Add character ${stages.length + 1}`}>
+          <span><Plus size={15} /> Add character</span>
+          <small>Optional next call</small>
         </button>
       )}
     </div>
