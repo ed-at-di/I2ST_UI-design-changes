@@ -2,35 +2,30 @@ import { ArrowRight, Library, LogOut, Play, Plus, Trash2 } from "lucide-react";
 import { assignedScenariosFromCatalog } from "../data/dummyAssignedScenarioData.js";
 import { DUMMY_STATS, DUMMY_USER } from "../data/dummyHomeData.js";
 
-function AssignedScenarioTable({ scenarios, loading, emptyText, onOpenScenario }) {
+function AssignedCallList({ scenarios, loading, emptyText, onOpenScenario }) {
   if (loading) return <p className="homeEmptyState">Loading scenarios…</p>;
   if (!scenarios.length) return <p className="homeEmptyState">{emptyText}</p>;
 
   return (
-    <div className="recentsTableWrap">
-      <table className="recentsTable assignedScenarioTable">
-        <thead>
-          <tr>
-            <th>Scenario</th>
-            <th>Role</th>
-            <th aria-label="Action"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {scenarios.map((item) => (
-            <tr key={item.assignmentId || item.scenario_id} className="assignedScenarioRow">
-              <td className="recentsTitleCell">{item.title}</td>
-              <td>{item.role || "—"}</td>
-              <td className="assignedLaunchCell">
-                <button className="assignedLaunchButton" type="button" onClick={() => onOpenScenario(item)}>
-                  <Play size={14} />
-                  <span>Launch Scenario</span>
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="assignedCallList">
+      {scenarios.map((item) => (
+        <article className="assignedCallGroup" key={item.assignmentId || item.scenario_id}>
+          <div className="assignedCallGroupHeading">
+            <div>
+              <h3>{item.title}</h3>
+              <p>Assigned by {item.assignedBy} · {item.activityLabel}</p>
+            </div>
+            <span>1 call</span>
+          </div>
+          <div className="assignedCallRow">
+            <div><span>Call 1</span><strong>{item.role || "Complainant"}</strong></div>
+            <button className="assignedLaunchButton" type="button" onClick={() => onOpenScenario(item)}>
+              <Play size={14} />
+              <span>Launch Call</span>
+            </button>
+          </div>
+        </article>
+      ))}
     </div>
   );
 }
@@ -129,12 +124,12 @@ export function HomeScreen({
         <section className="homeScenarios assignedScenarios">
           <div className="homeSectionHeading">
             <div>
-              <h2>Assigned Scenarios</h2>
-              <p>Scenarios selected for your upcoming training.</p>
+              <h2>Assigned Calls</h2>
+              <p>Upcoming character calls grouped by scenario.</p>
             </div>
             <span>{assignedScenarios.length} assigned</span>
           </div>
-          <AssignedScenarioTable
+          <AssignedCallList
             scenarios={assignedScenarios}
             loading={loading}
             emptyText="No scenarios are currently assigned."

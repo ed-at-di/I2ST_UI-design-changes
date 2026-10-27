@@ -81,12 +81,11 @@ export function ScenarioPreviewPanel({
 
   const activeStage = stages[activeStageIndex];
   const activeRole = formValue(activeStage, "chatbotRole", "chatbotRoleOther");
-  const primaryRole = formValue(stages[0], "chatbotRole", "chatbotRoleOther") || formValue(form, "chatbotRole", "chatbotRoleOther");
   const activePersona = personaValuesForStage(activeStage);
   const sourceTitle = isManualSource
     ? sourceLabel(source, catalog.curriculumScenarios || [])
     : "";
-  const draftTitle = scenario?.title || scenarioName || (primaryRole ? `${primaryRole}: Workplace Concern` : "New scenario preview");
+  const draftTitle = scenario?.title || (isExistingCopy && copySaved && scenarioName) || "Scenario Preview";
   const draftSummary =
     scenario?.summary ||
     (isManualSource
@@ -144,7 +143,7 @@ export function ScenarioPreviewPanel({
 
           {visibleSteps.has(2) && <PreviewBlock
             label="Scenario Builder"
-            complete={Boolean(form.domainType && (form.domainType !== "Military" || form.militaryBranch) && stages.every((stage) => stage.chatbotRole) && (isManualSource || factors.length))}
+            complete={Boolean(form.domainType && (form.domainType !== "Military" || form.militaryBranch) && (isManualSource || factors.length))}
             sectionRef={detailsSectionRef}
             active={wizardStep === 2}
             onNavigate={() => onNavigate?.(2)}
@@ -158,16 +157,6 @@ export function ScenarioPreviewPanel({
               </>
             )}
             {form.domainType && <p className="livePreviewLabeledItem"><strong>Domain:</strong> {form.domainType}{form.militaryBranch ? ` — ${form.militaryBranch}` : ""}</p>}
-            <p className="livePreviewLabeledItem"><strong>Characters:</strong> {stages.map((stage, index) => {
-              const role = stage.chatbotRole === "Other" ? stage.chatbotRoleOther : stage.chatbotRole;
-              return role ? `Call ${index + 1}: ${role}` : "";
-            }).filter(Boolean).join(" · ") || "Not configured"}</p>
-            {[
-              ["Setting", form.scenarioSetting],
-              ["Background", form.scenarioBackground],
-              ["Trigger", form.scenarioTrigger],
-              ["Challenge", form.scenarioChallenge],
-            ].map(([label, value]) => value && <p className="livePreviewLabeledItem" key={label}><strong>{label}:</strong> {value}</p>)}
             {form.otherDetails && <p className="livePreviewNote">{form.otherDetails}</p>}
           </PreviewBlock>}
 
@@ -178,8 +167,8 @@ export function ScenarioPreviewPanel({
             active={wizardStep === 3}
             onNavigate={() => onNavigate?.(3)}
           >
-            <strong>{form.decisionPoints.filter((point) => point.cue.trim() && point.learnerBehavior.trim() && point.consequence.trim()).length} mapped decision points</strong>
-            <p>{scenario ? "The shared scenario is ready for character personas." : "Generate the shared scenario before continuing to Characters."}</p>
+            {scenario && <strong>{scenario.title}</strong>}
+            <p>{scenario?.summary || "Generate the shared scenario before continuing to Characters."}</p>
           </PreviewBlock>}
 
           {visibleSteps.has(5) && <PreviewBlock label="Review" complete={Boolean(scenario)} sectionRef={outputSectionRef} active={wizardStep === 5} onNavigate={() => onNavigate?.(5)}>

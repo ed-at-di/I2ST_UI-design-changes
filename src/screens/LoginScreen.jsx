@@ -1,5 +1,5 @@
 import { ArrowRight } from "lucide-react";
-import logo from "../images/EOCo-logo-black.png";
+import logo from "../images/IIST-logo.png";
 import loginArtwork from "../images/login-background-art.jpg";
 import loginArtworkDark from "../images/login-background-art-dark.jpg";
 
@@ -13,7 +13,7 @@ export function LoginScreen({ onLogin, theme }) {
     <main className="loginScreen">
       <section className="loginPanel" aria-labelledby="login-heading">
         <div className="loginBrand">
-          <img src={logo} alt="EOCo" />
+          <img src={logo} alt="I2ST" />
         </div>
 
         <div className="loginFormShell">

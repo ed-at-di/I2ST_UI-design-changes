@@ -1,17 +1,18 @@
 import { useEffect } from "react";
-import { Dices, Plus, Trash2 } from "lucide-react";
+import { Dices } from "lucide-react";
 import { InfoNote } from "../../components/InfoNote.jsx";
 import { SelectControl } from "../../components/SelectControl.jsx";
 import { FIELD_INFO } from "../../data/fieldInfo.js";
 import {
-  CHATBOT_ROLES,
   COMPLEXITY_OPTIONS,
   DOMAIN_OPTIONS,
   FACTOR_OPTIONS,
   MILITARY_BRANCH_OPTIONS,
 } from "../../data/scenarioOptions.js";
 import { arrayToggle } from "../../lib/scenarioHelpers.js";
-import { activeScenarioStages, ensureScenarioStages, legacyPersonaPatch } from "../../lib/stageHelpers.js";
+import { activeScenarioStages } from "../../lib/stageHelpers.js";
+
+const MILITARY_FACTOR_OPTIONS = ["Race/Ethnicity", "Sex", "Religion", "National Origin", "Other"];
 
 function generatedStructure(domainType, militaryBranch, stages) {
   if (!domainType) return {};
@@ -56,36 +57,6 @@ export function DetailsStep({ form, updateForm, isManualSource }) {
     updateForm({ ...patch, stages: rankedStages, ...generatedStructure(nextDomain, nextBranch, rankedStages) });
   }
 
-  function addStage() {
-    if (stages.length >= 3) return;
-    const stageCount = stages.length + 1;
-    const nextStages = ensureScenarioStages(form, stageCount).slice(0, stageCount);
-    applySetup({ stageCount, stages: nextStages }, nextStages);
-  }
-
-  function removeStage(index) {
-    if (stages.length <= 1) return;
-    const nextStages = stages
-      .filter((_, stageIndex) => stageIndex !== index)
-      .map((stage, stageIndex) => ({ ...stage, id: `stage-${stageIndex + 1}`, name: `Stage ${stageIndex + 1}` }));
-    applySetup({
-      stageCount: nextStages.length,
-      stages: nextStages,
-      ...legacyPersonaPatch(nextStages[0]),
-    }, nextStages);
-  }
-
-  function updateStage(index, patch) {
-    const allStages = ensureScenarioStages(form, stages.length);
-    const updatedStage = { ...allStages[index], ...patch };
-    const nextStages = allStages.map((stage, stageIndex) => stageIndex === index ? updatedStage : stage);
-    applySetup({ stages: nextStages, ...(index === 0 ? legacyPersonaPatch(updatedStage) : {}) }, nextStages);
-  }
-
-  function stageUsingRole(role, currentIndex) {
-    return stages.findIndex((stage, index) => index !== currentIndex && role !== "Other" && stage.chatbotRole === role);
-  }
-
   function randomizeSelections() {
     const factors = FACTOR_OPTIONS.filter((item) => item !== "Other").sort(() => Math.random() - 0.5).slice(0, 2);
     const complexities = COMPLEXITY_OPTIONS.filter((item) => item !== "Other").sort(() => Math.random() - 0.5).slice(0, 1);
@@ -95,37 +66,7 @@ export function DetailsStep({ form, updateForm, isManualSource }) {
   return (
     <div className="wizardStepBody">
       <h2>Scenario Setup</h2>
-      <p className="wizardStepIntro">Set the character calls and domain first. The shared scenario structure will be populated automatically from these selections.</p>
-
-      <div className="studioGroup scenarioSetupSection">
-        <div className="stageSetupHeader">
-          <span className="studioLabel">Characters &amp; Call Order <InfoNote>{FIELD_INFO.scenarioParticipants}</InfoNote></span>
-          {stages.length < 3 && <button className="secondaryButton compactActionButton" type="button" onClick={addStage}><Plus size={15} /><span>Add Character</span></button>}
-        </div>
-        <div className="scenarioParticipantGrid">
-          {stages.map((stage, index) => (
-            <div className="scenarioParticipantCard" key={stage.id}>
-              <div className="scenarioParticipantCardHeader">
-                <strong>Call {index + 1}</strong>
-                {index === 0 && <small>Required complainant</small>}
-                {stages.length > 1 && index > 0 && <button className="removeStageButton" type="button" onClick={() => removeStage(index)} aria-label={`Remove character ${index + 1}`} title={`Remove character ${index + 1}`}><Trash2 size={15} /></button>}
-              </div>
-              <label className="studioField compactField">
-                <span>Role*</span>
-                <SelectControl value={stage.chatbotRole} onChange={(event) => updateStage(index, { chatbotRole: event.target.value })} disabled={index === 0}>
-                  <option value="" disabled>Select a role</option>
-                  {CHATBOT_ROLES.map((role) => {
-                    const selectedStage = stageUsingRole(role, index);
-                    return <option key={role} value={role} disabled={selectedStage >= 0}>{role}{selectedStage >= 0 ? ` — Call ${selectedStage + 1}` : ""}</option>;
-                  })}
-                </SelectControl>
-              </label>
-              {stage.chatbotRole === "Other" && <input value={stage.chatbotRoleOther} onChange={(event) => updateStage(index, { chatbotRoleOther: event.target.value })} placeholder="Custom role" />}
-              {form.domainType === "Military" && form.militaryBranch && <p className="assignedDomainTitle"><span>Assigned rank</span><strong>{stage.domainTitle || rankForBranch(form.militaryBranch, index)}</strong></p>}
-            </div>
-          ))}
-        </div>
-      </div>
+      <p className="wizardStepIntro">Choose the domain and scenario characteristics. Character count and call order are configured in the Characters step.</p>
 
       <div className="studioGroup scenarioDomainSection">
         <span className="studioLabel">Scenario Domain* <InfoNote>{FIELD_INFO.scenarioDomain}</InfoNote></span>
@@ -148,15 +89,6 @@ export function DetailsStep({ form, updateForm, isManualSource }) {
         )}
       </div>
 
-      <div className="studioGroup scenarioStructureSection">
-        <span className="studioLabel">Generated Scenario Structure <InfoNote>{FIELD_INFO.generatedScenarioStructure}</InfoNote></span>
-        <div className="generatedStructureGrid">
-          {[["Setting", form.scenarioSetting], ["Background", form.scenarioBackground], ["Trigger", form.scenarioTrigger], ["Challenge", form.scenarioChallenge]].map(([label, value]) => (
-            <div className="generatedStructureCard" key={label}><strong>{label}</strong><p>{value || "Complete the character and domain selections above."}</p></div>
-          ))}
-        </div>
-      </div>
-
       {!isManualSource && (
         <div className="studioGroup generatedInputsSection">
           <div className="sectionTitleRow"><span className="studioLabel">Scenario Characteristics</span><button className="secondaryButton compactActionButton" type="button" onClick={randomizeSelections}><Dices size={15} /><span>Randomize</span></button></div>
@@ -164,7 +96,7 @@ export function DetailsStep({ form, updateForm, isManualSource }) {
           <div className="studioGroup innerStudioGroup factorGroup">
             <span className="studioLabel">Scenario Factors <InfoNote>{FIELD_INFO.scenarioFactors}</InfoNote></span>
             <div className="checkboxGrid">
-              {FACTOR_OPTIONS.map((factor) => factor === "Other" ? (
+              {(form.domainType === "Military" ? MILITARY_FACTOR_OPTIONS : FACTOR_OPTIONS).map((factor) => factor === "Other" ? (
                 <div className="checkRow otherRow" key={factor}><label className="otherToggle"><input type="checkbox" checked={form.scenarioFactors.includes(factor)} onChange={() => updateForm({ scenarioFactors: arrayToggle(form.scenarioFactors, factor) })} /><span>{factor}</span></label><input className="otherFactor" value={form.otherFactor} onChange={(event) => updateForm({ otherFactor: event.target.value })} disabled={!form.scenarioFactors.includes(factor)} placeholder="Other" /></div>
               ) : <label className="checkRow" key={factor}><input type="checkbox" checked={form.scenarioFactors.includes(factor)} onChange={() => updateForm({ scenarioFactors: arrayToggle(form.scenarioFactors, factor) })} /><span>{factor}</span></label>)}
             </div>

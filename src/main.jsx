@@ -574,6 +574,15 @@ function App() {
         stepLabel: session ? "In chat" : `Step ${draftStepIndex + 1} of ${draftSteps.length} · ${STEPS[wizardStep]?.label}`,
       }
     : null;
+  const reviewCalls = activeScenarioStages(form).map((stage, index) => {
+    const savedRun = runtimeStageRuns[index];
+    const callMessages = index === runtimeStageIndex ? messages : savedRun?.messages || [];
+    return {
+      index,
+      role: (stage.chatbotRole === "Other" ? stage.chatbotRoleOther : stage.chatbotRole) || `Character ${index + 1}`,
+      messages: callMessages,
+    };
+  });
 
   let body;
   if (view === "login") {
@@ -587,7 +596,6 @@ function App() {
         formatLatency={formatLatency}
         input={input}
         messages={messages}
-        scenario={scenario}
         scrollRef={scrollRef}
         sendTurn={sendTurn}
         session={session}
@@ -608,7 +616,7 @@ function App() {
         busy={busy}
         onJoin={joinScheduledCall}
         onBack={returnFromCallLobby}
-        backLabel={draftActive ? "Back to scenario creation" : "Back to scenarios"}
+        backLabel={draftActive ? "Back to scenario creation" : "Back to Dashboard"}
       />
     );
   } else if (view === "aar" && session) {
@@ -617,6 +625,7 @@ function App() {
         scenario={scenario}
         form={form}
         messages={messages}
+        calls={reviewCalls}
         busy={busy}
         onReturnHome={finishAfterActionReview}
         onRunAgain={startSession}
@@ -681,7 +690,7 @@ function App() {
                     const stage = activeScenarioStages(form)[runtimeStageIndex];
                     return (stage?.chatbotRole === "Other" ? stage.chatbotRoleOther : stage?.chatbotRole) || "Avatar";
                   })()}`,
-                  onEndSession: endTrainingSession,
+                  onEndSession: finishRuntimeCall,
                 }
               : undefined
           }

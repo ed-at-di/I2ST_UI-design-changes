@@ -42,17 +42,17 @@ export function RoleFocusStep({ form, updateForm, competencies }) {
   return (
     <div className="wizardStepBody">
       <h2>Assessment</h2>
-      <p className="wizardStepIntro">Choose the mock rubric and behaviors this scenario should assess across every character call.</p>
+      <p className="wizardStepIntro">Choose the interpersonal-skills behaviors this scenario should assess across every character call.</p>
 
       <label className="studioField kpaSelectionField">
         <span className="studioLabel">KPA* <InfoNote>{FIELD_INFO.selectedKpa}</InfoNote></span>
         <SelectControl value={form.selectedKpa || ""} onChange={(event) => selectKpa(event.target.value)}>
           <option value="" disabled>Select a KPA</option>
-          <optgroup label="Mock interpersonal-skills rubric">
+          <optgroup label="I2ST assessment rubric">
             {KPA_OPTIONS.map((kpa) => <option key={kpa}>{kpa}</option>)}
           </optgroup>
         </SelectControl>
-        <span className="fieldHelperText">Prototype rubric data. Selecting a KPA updates the behavior groups below.</span>
+        <span className="fieldHelperText">Selecting the KPA updates the behavior groups below.</span>
       </label>
 
       <div className="studioGroup innerStudioGroup competencyGroup">

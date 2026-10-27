@@ -1,8 +1,11 @@
-import { CheckCircle2, CircleAlert, FileSpreadsheet, Play } from "lucide-react";
+import { CheckCircle2, CircleAlert, FileSpreadsheet, Pencil, Play } from "lucide-react";
 import { ExistingCopyBanner } from "../ExistingCopyBanner.jsx";
+import { activeScenarioStages } from "../../lib/stageHelpers.js";
 
 export function ReviewStep({
   scenario,
+  form,
+  onEditSection,
   isManualSource,
   status,
   error,
@@ -19,6 +22,7 @@ export function ReviewStep({
   onCopyNameChange,
   onSaveCopy,
 }) {
+  const stages = activeScenarioStages(form);
   return (
     <div className="wizardStepBody reviewStepBody">
       <h2>Review &amp; Launch</h2>
@@ -53,8 +57,28 @@ export function ReviewStep({
         </div>
       </div>
 
+      <div className="reviewSummaryGrid">
+        <section className="reviewSummarySection">
+          <div><span>Assessment</span><button type="button" onClick={() => onEditSection(1)}><Pencil size={14} /> Edit</button></div>
+          <h3>{form.selectedKpa}</h3>
+          <p>{(form.competencyBehaviorFocuses || []).join(", ")}</p>
+        </section>
+        <section className="reviewSummarySection">
+          <div><span>Scenario</span><button type="button" onClick={() => onEditSection(2)}><Pencil size={14} /> Edit</button></div>
+          <h3>{scenario?.title || "Generate the scenario to review it"}</h3>
+          <p>{scenario?.summary || "The generated summary will appear here."}</p>
+          <p><strong>Domain:</strong> {form.domainType}{form.militaryBranch ? ` — ${form.militaryBranch}` : ""}</p>
+          <p><strong>Factors:</strong> {(form.scenarioFactors || []).join(", ") || "None"}</p>
+          <p><strong>Complexities:</strong> {(form.scenarioComplexities || []).join(", ") || "None"}</p>
+        </section>
+        <section className="reviewSummarySection">
+          <div><span>Characters and call order</span><button type="button" onClick={() => onEditSection(4)}><Pencil size={14} /> Edit</button></div>
+          <ol>{stages.map((stage, index) => <li key={stage.id}><strong>Call {index + 1}</strong><span>{stage.chatbotRole === "Other" ? stage.chatbotRoleOther : stage.chatbotRole}</span></li>)}</ol>
+        </section>
+      </div>
+
       <div className="wizardActions reviewActions">
-        <button className="secondaryButton" type="button" onClick={onExport} disabled={busy || loading}>
+        <button className="secondaryButton" type="button" onClick={onExport} disabled={busy || loading || !scenario}>
           <FileSpreadsheet size={16} />
           <span>Export Scenario</span>
         </button>

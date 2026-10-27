@@ -1,9 +1,10 @@
-import { Dices, Sparkles } from "lucide-react";
+import { Dices, Plus, Trash2 } from "lucide-react";
 import { InfoNote } from "../../components/InfoNote.jsx";
 import { SelectControl } from "../../components/SelectControl.jsx";
 import { StageTabs } from "../../components/StageTabs.jsx";
 import { FIELD_INFO } from "../../data/fieldInfo.js";
 import {
+  CHATBOT_ROLES,
   PERSONA_COMMUNICATION_STYLE_OPTIONS,
   PERSONA_EMOTIONAL_STATE_OPTIONS,
   PERSONA_PRIMARY_CONCERN_OPTIONS,
@@ -68,6 +69,32 @@ export function PersonaStep({ form, updateForm, activeStageIndex, setActiveStage
     });
   }
 
+  function stageUsingRole(role, currentIndex) {
+    return stages.findIndex((stage, index) => index !== currentIndex && role !== "Other" && stage.chatbotRole === role);
+  }
+
+  function addStage() {
+    if (stages.length >= 3) return;
+    const nextCount = stages.length + 1;
+    updateForm({ stageCount: nextCount, stages: ensureScenarioStages(form, nextCount).slice(0, nextCount) });
+    setActiveStageIndex(nextCount - 1);
+  }
+
+  function removeStage(index) {
+    if (stages.length <= 1 || index === 0) return;
+    const nextStages = stages
+      .filter((_, stageIndex) => stageIndex !== index)
+      .map((stage, stageIndex) => ({ ...stage, id: `stage-${stageIndex + 1}`, name: `Stage ${stageIndex + 1}` }));
+    updateForm({ stageCount: nextStages.length, stages: nextStages });
+    setActiveStageIndex(Math.max(0, Math.min(activeStageIndex, nextStages.length - 1)));
+  }
+
+  function updateStageAt(index, patch) {
+    const allStages = ensureScenarioStages(form, stages.length);
+    const nextStages = allStages.map((item, stageIndex) => stageIndex === index ? { ...item, ...patch } : item);
+    updateForm({ stages: nextStages });
+  }
+
   return (
     <div className="wizardStepBody">
       <StageTabs
@@ -79,11 +106,39 @@ export function PersonaStep({ form, updateForm, activeStageIndex, setActiveStage
         panelIdPrefix="stage-persona-panel"
       />
 
+      <div className="studioGroup scenarioSetupSection characterStepCallSetup">
+        <div className="stageSetupHeader">
+          <span className="studioLabel">Characters &amp; Call Order <InfoNote>{FIELD_INFO.scenarioParticipants}</InfoNote></span>
+          {stages.length < 3 && <button className="secondaryButton compactActionButton" type="button" onClick={addStage}><Plus size={15} /><span>Add Character</span></button>}
+        </div>
+        <div className="scenarioParticipantGrid">
+          {stages.map((stage, index) => (
+            <div className={`scenarioParticipantCard ${index === activeStageIndex ? "active" : ""}`} key={stage.id}>
+              <div className="scenarioParticipantCardHeader">
+                <button type="button" onClick={() => setActiveStageIndex(index)}><strong>Call {index + 1}</strong></button>
+                {index === 0 && <small>Required complainant</small>}
+                {index > 0 && <button className="removeStageButton" type="button" onClick={() => removeStage(index)} aria-label={`Remove character ${index + 1}`}><Trash2 size={15} /></button>}
+              </div>
+              <label className="studioField compactField">
+                <span>Role*</span>
+                <SelectControl value={stage.chatbotRole} disabled={index === 0} onChange={(event) => updateStageAt(index, { chatbotRole: event.target.value })}>
+                  <option value="" disabled>Select a role</option>
+                  {CHATBOT_ROLES.map((role) => {
+                    const selectedStage = stageUsingRole(role, index);
+                    return <option key={role} value={role} disabled={selectedStage >= 0}>{role}{selectedStage >= 0 ? ` — Call ${selectedStage + 1}` : ""}</option>;
+                  })}
+                </SelectControl>
+              </label>
+              {stage.chatbotRole === "Other" && <input value={stage.chatbotRoleOther} onChange={(event) => updateStageAt(index, { chatbotRoleOther: event.target.value })} placeholder="Custom role" />}
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="personaStepHeading">
         <div><h2>Character Personas</h2><p className="wizardStepIntro">Choose the role and persona traits for the selected character call.</p></div>
         <div className="personaGenerateActions">
           <button className="secondaryButton compactActionButton" type="button" onClick={generatePersona}><Dices size={15} /><span>Randomize</span></button>
-          <button className="primaryButton compactActionButton" type="button" onClick={generatePersona}><Sparkles size={15} /><span>Generate Persona</span></button>
         </div>
       </div>
 
@@ -163,11 +218,6 @@ export function PersonaStep({ form, updateForm, activeStageIndex, setActiveStage
           <span className="studioLabel">Chatbot Behavior Notes <em>(optional)</em></span>
           <textarea value={activeStage.chatbotBehaviorNotes} onChange={(event) => updateStage({ chatbotBehaviorNotes: event.target.value })} placeholder={`Optional behavior notes for how this character should speak or react in Call ${activeStageIndex + 1}`} />
           <InfoNote>{FIELD_INFO.chatbotBehaviorNotes}</InfoNote>
-        </label>
-        <label className="studioField">
-          <span className="studioLabel">Persona Notes <em>(optional)</em></span>
-          <textarea value={activeStage.personaNotes} onChange={(event) => updateStage({ personaNotes: event.target.value })} placeholder={`Optional persona details for Character ${activeStageIndex + 1}`} />
-          <InfoNote>{FIELD_INFO.personaNotes}</InfoNote>
         </label>
       </div>
     </div>

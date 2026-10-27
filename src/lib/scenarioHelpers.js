@@ -355,13 +355,6 @@ export function writeScenarioWorkbook(XLSX, scenario) {
     { group: "scenario", cells: ["Challenge", payload.scenarioChallenge || "None"] },
     ...(isSourceLibraryScenario ? [{ group: "scenario", cells: ["Source Curriculum Scenario", sourceText] }] : []),
     { group: "scenario", cells: ["Other Details", payload.otherDetails || "None"] },
-    {
-      group: "evaluation",
-      cells: [
-        "Decision & Evidence Map",
-        (payload.decisionPoints || []).map((point, index) => `${index + 1}. Cue: ${clean(point.cue)}\nLearner behavior: ${clean(point.learnerBehavior)}\nConsequence/evidence: ${clean(point.consequence)}`).join("\n\n") || "None",
-      ],
-    },
     { group: "persona", cells: ["Chatbot Character", scenario.avatar_name || ""] },
     { group: "persona", cells: ["Persona Inputs", personaDetails] },
     { group: "summary", kind: "boxed", cells: ["Scenario Title", scenario.title || ""] },

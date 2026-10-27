@@ -1,5 +1,5 @@
 import { ArrowLeft, Check, FileSpreadsheet, Moon, PhoneOff, Sun } from "lucide-react";
-import logo from "../images/EOCo-logo-black.png";
+import logo from "../images/IIST-logo.png";
 
 export function AppHeader({ wizardNavigation, runtimeSession, aarNavigation, themeToggle }) {
   const currentWizardPosition = wizardNavigation
@@ -20,11 +20,11 @@ export function AppHeader({ wizardNavigation, runtimeSession, aarNavigation, the
           </button>
         ) : aarNavigation ? (
           <button className="appHeaderMark appHeaderHomeLogo" type="button" onClick={aarNavigation.onHome} aria-label="Return Home" title="Return Home">
-            <img src={logo} alt="EOCo" />
+            <img src={logo} alt="I2ST" />
           </button>
         ) : (
           <span className="appHeaderMark">
-            <img src={logo} alt="EOCo" />
+            <img src={logo} alt="I2ST" />
           </span>
         )}
       </div>

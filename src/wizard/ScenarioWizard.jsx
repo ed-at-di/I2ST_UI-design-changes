@@ -63,7 +63,7 @@ export function ScenarioWizard({
   }, [step]);
 
   const kpaFocusValid = Boolean(form.selectedKpa) && (form.competencyBehaviorFocuses || []).length > 0;
-  const setupValid = Boolean(form.domainType) && (form.domainType !== "Military" || Boolean(form.militaryBranch)) && stages.every((stage) => Boolean(stage.chatbotRole && (stage.chatbotRole !== "Other" || stage.chatbotRoleOther.trim())));
+  const setupValid = Boolean(form.domainType) && (form.domainType !== "Military" || Boolean(form.militaryBranch));
   const detailsValid = setupValid && (isManualSource || form.scenarioFactors.length > 0);
   const evaluationValid = Boolean(scenario);
   const personaValid = stages.every(stagePersonaComplete);
@@ -102,6 +102,8 @@ export function ScenarioWizard({
             {step === 5 && (
               <ReviewStep
                 scenario={scenario}
+                form={form}
+                onEditSection={setStep}
                 isManualSource={isManualSource}
                 status={status}
                 error={error}

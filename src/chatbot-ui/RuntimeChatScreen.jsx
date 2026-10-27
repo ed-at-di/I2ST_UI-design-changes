@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import {
-  Clock3,
   CheckCircle2,
   MessageSquareText,
   Mic,
@@ -49,17 +48,12 @@ function petalPath(score, angle) {
   ].join(" ");
 }
 
-function formatTime(value = new Date()) {
-  return new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(new Date(value));
-}
-
 export function RuntimeChatScreen({
   busy,
   error,
   formatLatency,
   input,
   messages,
-  scenario,
   scrollRef,
   sendTurn,
   session,
@@ -72,13 +66,13 @@ export function RuntimeChatScreen({
 }) {
   const [showDetails, setShowDetails] = useState(true);
   const [listening, setListening] = useState(false);
-  const avatarName = scenario?.avatar_name || "Avatar";
   const traineeTurns = messages.filter((item) => item.role === "trainee").length;
   const latestAvatar = [...messages].reverse().find((item) => item.role === "avatar");
+  const activeStage = stages[activeStageIndex];
+  const activeRole = activeStage?.chatbotRole === "Other" ? activeStage.chatbotRoleOther : activeStage?.chatbotRole;
   const nextStage = stages[activeStageIndex + 1];
   const nextRole = nextStage?.chatbotRole === "Other" ? nextStage.chatbotRoleOther : nextStage?.chatbotRole;
   const isLastCall = activeStageIndex >= stages.length - 1;
-  const meetingProgress = Math.min(92, 18 + traineeTurns * 12);
   const panelClassName = [
     "runtimeExperience",
     showDetails ? "detailsOpen" : "detailsClosed",
@@ -114,13 +108,6 @@ export function RuntimeChatScreen({
     event.currentTarget.form?.requestSubmit();
   }
 
-  function scheduledTime(stageIndex, hourOffset = 0) {
-    const time = new Date();
-    time.setMinutes(0, 0, 0);
-    time.setHours(time.getHours() + stageIndex + hourOffset);
-    return formatTime(time);
-  }
-
   return (
     <main className={`runtimeScreen ${error ? "hasError" : ""}`}>
       {error && (
@@ -135,7 +122,6 @@ export function RuntimeChatScreen({
             <div id="unity-avatar-stage" className="runtimeAvatarStage" aria-label="Avatar display" />
 
             <div className="runtimeLiveResponse">
-              <span>{avatarName}</span>
               <p>{latestAvatar?.text || "The avatar response will appear here when the roleplay begins."}</p>
             </div>
 
@@ -185,8 +171,7 @@ export function RuntimeChatScreen({
 
           <nav className="runtimeStageSwitcher" aria-label="Call schedule">
               <div className="runtimeCalendarHeading">
-                <span>Today</span>
-                <strong>Call schedule</strong>
+                <strong>Scenario calls</strong>
               </div>
               <div className="runtimeCalendarTimeline">
               {stages.map((stage, index) => {
@@ -194,7 +179,6 @@ export function RuntimeChatScreen({
                 const active = index === activeStageIndex;
                 return (
                   <div className="runtimeCalendarSlot" key={stage.id || index}>
-                    <time>{scheduledTime(index)}</time>
                     <button
                       className={`${active ? "active" : ""} ${completedCalls.includes(index) ? "complete" : ""}`.trim()}
                       type="button"
@@ -204,8 +188,7 @@ export function RuntimeChatScreen({
                     >
                       <span>Call {index + 1}</span>
                       <small>{role || "Character"}</small>
-                      <em>{scheduledTime(index)}–{scheduledTime(index, 1)}</em>
-                      {active && <i className="runtimeMeetingProgress" aria-label={`${meetingProgress}% through this meeting`}><b style={{ height: `${meetingProgress}%` }} /></i>}
+                      <em>{active ? "Current call" : completedCalls.includes(index) ? "Completed" : "Not started"}</em>
                     </button>
                   </div>
                 );
@@ -278,12 +261,10 @@ export function RuntimeChatScreen({
                   <article className={`runtimeMessageRow ${message.role}`} key={`${message.role}-${index}`}>
                     <div className={`runtimeBubble ${message.role}`}>
                       <span>
-                        {message.role === "avatar" ? avatarName : "Trainee"}
-                        {message.latencyMs !== undefined && <em><Clock3 size={12} />{formatLatency(message.latencyMs)}</em>}
+                        {message.role === "avatar" ? activeRole || "Character" : "Trainee"}
                       </span>
                       <p>{message.text}</p>
                     </div>
-                    <time>{formatTime()}</time>
                   </article>
                 ))}
                 {busy && <div className="runtimeTypingLine" aria-label="Avatar is responding"><span /><span /><span /></div>}

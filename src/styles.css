@@ -1711,16 +1711,6 @@ textarea:focus {
 
 .runtimeCalendarHeading {
   margin-bottom: 14px;
-  display: grid;
-  gap: 2px;
-}
-
-.runtimeCalendarHeading span {
-  color: #078da2;
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .runtimeCalendarHeading strong {
@@ -1729,42 +1719,20 @@ textarea:focus {
 }
 
 .runtimeCalendarTimeline {
-  position: relative;
   display: grid;
-}
-
-.runtimeCalendarTimeline::before {
-  content: "";
-  position: absolute;
-  top: 8px;
-  bottom: 8px;
-  left: 39px;
-  width: 1px;
-  background: #cbd8dd;
+  gap: 10px;
 }
 
 .runtimeCalendarSlot {
-  position: relative;
-  min-height: 112px;
-  display: grid;
-  grid-template-columns: 34px minmax(0, 1fr);
-  gap: 12px;
-}
-
-.runtimeCalendarSlot > time {
-  padding-top: 4px;
-  color: #7a8791;
-  font-size: 10px;
-  font-weight: 800;
-  text-align: right;
-  white-space: nowrap;
+  min-width: 0;
 }
 
 .runtimeCalendarSlot button {
   position: relative;
+  width: 100%;
   min-width: 0;
-  height: 96px;
-  padding: 11px 12px 11px 15px;
+  min-height: 84px;
+  padding: 12px 14px;
   display: grid;
   align-content: start;
   gap: 3px;
@@ -1820,20 +1788,6 @@ textarea:focus {
   font-weight: 750;
 }
 
-.runtimeMeetingProgress {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 5px;
-  background: rgba(7, 141, 162, 0.12);
-}
-
-.runtimeMeetingProgress b {
-  position: absolute;
-  inset: 0 0 auto;
-  border-radius: 0 0 4px 0;
-  background: #078da2;
-}
-
 .runtimeAvatarStage {
   position: relative;
   width: 100%;
@@ -1845,28 +1799,46 @@ textarea:focus {
 }
 
 .runtimeLiveResponse {
-  max-height: 126px;
-  padding: 16px 20px;
-  border-bottom: 1px solid #e1e9ed;
-  background: #ffffff;
-  overflow-y: auto;
+  position: relative;
+  margin: 20px;
+  padding: 16px 18px;
+  border: 1px solid #b8dce2;
+  border-radius: 16px;
+  background: #eef8fa;
 }
 
-.runtimeLiveResponse span {
-  display: block;
-  margin-bottom: 6px;
-  color: #078da2;
-  font-size: 12px;
-  font-weight: 900;
-  text-transform: uppercase;
+.runtimeLiveResponse::before,
+.runtimeLiveResponse::after {
+  position: absolute;
+  left: 42px;
+  width: 0;
+  height: 0;
+  border-right: 13px solid transparent;
+  border-left: 13px solid transparent;
+  content: "";
+}
+
+.runtimeLiveResponse::before {
+  top: -14px;
+  border-bottom: 14px solid #b8dce2;
+}
+
+.runtimeLiveResponse::after {
+  top: -12px;
+  margin-left: 1px;
+  border-right-width: 12px;
+  border-bottom: 13px solid #eef8fa;
+  border-left-width: 12px;
 }
 
 .runtimeLiveResponse p {
+  max-height: 94px;
   margin: 0;
   color: #1f2b36;
   font-size: 17px;
-  font-weight: 700;
+  font-weight: 500;
   line-height: 1.5;
+  overflow-y: auto;
 }
 
 .runtimeTranscript {
@@ -2296,6 +2268,61 @@ textarea:focus {
   border-color: #bedde3;
 }
 
+.assignedCallList {
+  display: grid;
+  gap: 14px;
+}
+
+.assignedCallGroup {
+  overflow: hidden;
+  border: 1px solid #bedde3;
+  border-radius: var(--surface-radius);
+  background: #ffffff;
+}
+
+.assignedCallGroupHeading,
+.assignedCallRow {
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.assignedCallGroupHeading {
+  border-bottom: 1px solid #dbe9ec;
+  background: #f6fafb;
+}
+
+.assignedCallGroupHeading h3 {
+  margin: 0 0 4px;
+  color: #19343d;
+  font-size: 16px;
+}
+
+.assignedCallGroupHeading p,
+.assignedCallGroupHeading > span,
+.assignedCallRow > div > span {
+  margin: 0;
+  color: #74808a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.assignedCallGroupHeading > span {
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+.assignedCallRow > div {
+  display: grid;
+  gap: 3px;
+}
+
+.assignedCallRow strong {
+  color: #19343d;
+}
+
 .currentCard {
   padding: 20px 24px;
   display: flex;
@@ -2629,6 +2656,114 @@ textarea:focus {
 .assignedLaunchButton:hover {
   border-color: #066e7e;
   background: #066e7e;
+}
+
+.aarCallTabs {
+  padding: 0 20px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.aarCallTabs button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #c9dce1;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #48616a;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.aarCallTabs button.active {
+  border-color: #078da2;
+  background: #eaf7f9;
+  color: #067f92;
+}
+
+.aarCompositeSummary {
+  padding: 0 20px 20px;
+  display: grid;
+  gap: 8px;
+}
+
+.aarCompositeSummary article {
+  padding: 12px 14px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  border-radius: 8px;
+  background: #f5f9fa;
+}
+
+.aarCompositeSummary span {
+  color: #74808a;
+  font-size: 12px;
+}
+
+.reviewSummaryGrid {
+  display: grid;
+  gap: 14px;
+}
+
+.reviewSummarySection {
+  padding: 18px;
+  border: 1px solid #d5e4e8;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.reviewSummarySection > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.reviewSummarySection > div > span {
+  color: #078da2;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.reviewSummarySection button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  background: transparent;
+  color: #067f92;
+  font-weight: 800;
+}
+
+.reviewSummarySection h3 {
+  margin: 10px 0 6px;
+}
+
+.reviewSummarySection p {
+  margin: 6px 0 0;
+  color: #536a73;
+  line-height: 1.45;
+}
+
+.reviewSummarySection ol {
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  list-style: none;
+}
+
+.reviewSummarySection li {
+  display: flex;
+  gap: 12px;
+}
+
+.reviewSummarySection li strong {
+  min-width: 54px;
+  color: #19343d;
 }
 
 .wizardShell {
@@ -3835,6 +3970,21 @@ textarea:focus {
   background: #102b36;
 }
 
+.appShell[data-theme="dark"] .assignedCallGroup {
+  border-color: #294753;
+  background: #102b36;
+}
+
+.appShell[data-theme="dark"] .assignedCallGroupHeading {
+  border-color: #294753;
+  background: #122f3a;
+}
+
+.appShell[data-theme="dark"] .assignedCallGroupHeading h3,
+.appShell[data-theme="dark"] .assignedCallRow strong {
+  color: #edf5f7;
+}
+
 .appShell[data-theme="dark"] .appHeader {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
 }
@@ -3855,7 +4005,16 @@ textarea:focus {
 .appShell[data-theme="dark"] .runtimeStageHeader,
 .appShell[data-theme="dark"] .runtimeStageSwitcher,
 .appShell[data-theme="dark"] .runtimeLiveResponse {
-  border-color: #294753;
+  border-color: #3b6370;
+  background: #16323d;
+}
+
+.appShell[data-theme="dark"] .runtimeLiveResponse::before {
+  border-bottom-color: #3b6370;
+}
+
+.appShell[data-theme="dark"] .runtimeLiveResponse::after {
+  border-bottom-color: #16323d;
 }
 
 .appShell[data-theme="dark"] .runtimeStageSwitcher {

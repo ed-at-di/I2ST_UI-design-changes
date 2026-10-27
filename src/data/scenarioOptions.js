@@ -11,30 +11,14 @@ export const MILITARY_BRANCH_OPTIONS = [
   "Space Force",
 ];
 
-// Placeholder values until KPA data is supplied by the connected application.
-export const KPA_OPTIONS = ["KPA 1", "KPA 2", "KPA 3", "KPA 4", "KPA 5"];
+export const KPA_OPTIONS = ["EO Interpersonal Skills"];
 
 // Mock rubric structure until the connected application provides KPA data.
 export const KPA_BEHAVIOR_GROUPS = {
-  "KPA 1": [
+  "EO Interpersonal Skills": [
     { title: "Empathy & Support", details: ["Empathy & Reassurance", "Active Listening", "Crisis Management"] },
     { title: "Communication Skills", details: ["Clarity of Communication", "Questioning Technique"] },
-  ],
-  "KPA 2": [
-    { title: "Communication Skills", details: ["Non-Verbal Communication", "Professionalism & Composure"] },
-    { title: "Credibility & Problem-Solving", details: ["Resolution & Procedural Competency"] },
-  ],
-  "KPA 3": [
-    { title: "Credibility & Problem-Solving", details: ["Documenting Information", "Resolution & Procedural Competency"] },
-    { title: "Communication Skills", details: ["Clarity of Communication"] },
-  ],
-  "KPA 4": [
-    { title: "Empathy & Support", details: ["Active Listening", "Crisis Management"] },
-    { title: "Communication Skills", details: ["Questioning Technique", "Professionalism & Composure"] },
-  ],
-  "KPA 5": [
-    { title: "Empathy & Support", details: ["Empathy & Reassurance"] },
-    { title: "Credibility & Problem-Solving", details: ["Documenting Information"] },
+    { title: "Credibility & Problem-Solving", details: ["Resolution & Procedural Competency", "Documenting Information"] },
   ],
 };
 
@@ -117,7 +101,7 @@ export const DEFAULT_FORM = {
   competencyFocus: "Empathy & Support",
   competencyFocuses: ["Empathy & Support"],
   competencyBehaviorFocuses: ["Empathy & Reassurance", "Active Listening", "Crisis Management"],
-  selectedKpa: "KPA 1",
+  selectedKpa: "EO Interpersonal Skills",
   performanceObjective: "",
   domainType: "Civilian",
   militaryBranch: "",

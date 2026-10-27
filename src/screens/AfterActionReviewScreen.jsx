@@ -1,20 +1,23 @@
+import { useState } from "react";
 import { ArrowLeft, Download, MessageSquareText, RefreshCcw, Target, UsersRound } from "lucide-react";
 import { activeScenarioStages } from "../lib/stageHelpers.js";
 
-export function AfterActionReviewScreen({ scenario, form, messages, busy, onReturnHome, onRunAgain }) {
+export function AfterActionReviewScreen({ scenario, form, messages, calls = [], busy, onReturnHome, onRunAgain }) {
   const stages = activeScenarioStages(form);
-  const traineeMessages = messages.filter((message) => message.role === "trainee");
-  const avatarMessages = messages.filter((message) => message.role === "avatar");
-  const responseTimes = avatarMessages.map((message) => Number(message.latencyMs)).filter(Number.isFinite);
-  const averageResponse = responseTimes.length ? Math.round(responseTimes.reduce((sum, value) => sum + value, 0) / responseTimes.length) : null;
+  const completedCalls = calls.filter((call) => call.messages.length);
+  const [selectedCallIndex, setSelectedCallIndex] = useState(completedCalls[0]?.index || 0);
+  const allMessages = completedCalls.flatMap((call) => call.messages);
+  const activeCall = selectedCallIndex < 0 ? null : completedCalls.find((call) => call.index === selectedCallIndex) || completedCalls[0];
+  const visibleMessages = activeCall?.messages || messages;
+  const traineeMessages = allMessages.filter((message) => message.role === "trainee");
   const focusAreas = form.competencyFocuses || [];
   const behaviors = form.competencyBehaviorFocuses || [];
 
   function exportTranscript() {
     const title = scenario?.title || "Scenario Review";
-    const transcript = messages
-      .map((message) => `${message.role === "trainee" ? "Learner" : scenario?.avatar_name || "Avatar"}: ${message.text}`)
-      .join("\n\n");
+    const transcript = completedCalls
+      .map((call) => `CALL ${call.index + 1}: ${call.role}\n\n${call.messages.map((message) => `${message.role === "trainee" ? "Learner" : call.role}: ${message.text}`).join("\n\n")}`)
+      .join("\n\n---\n\n");
     const file = new Blob([`${title}\nAfter Action Review Transcript\n\n${transcript}\n`], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(file);
     const link = document.createElement("a");
@@ -38,10 +41,10 @@ export function AfterActionReviewScreen({ scenario, form, messages, busy, onRetu
       </section>
 
       <section className="aarMetrics" aria-label="Session summary">
-        <article><MessageSquareText size={20} /><div><strong>{messages.length}</strong><span>Total messages</span></div></article>
+        <article><MessageSquareText size={20} /><div><strong>{allMessages.length}</strong><span>Total messages</span></div></article>
         <article><Target size={20} /><div><strong>{traineeMessages.length}</strong><span>Learner responses</span></div></article>
-        <article><UsersRound size={20} /><div><strong>{stages.length}</strong><span>Scenario stages</span></div></article>
-        <article><RefreshCcw size={20} /><div><strong>{averageResponse ? `${averageResponse} ms` : "—"}</strong><span>Avg. avatar response</span></div></article>
+        <article><UsersRound size={20} /><div><strong>{completedCalls.length} of {stages.length}</strong><span>Calls completed</span></div></article>
+        <article><RefreshCcw size={20} /><div><strong>{completedCalls.length === stages.length ? "Complete" : "In progress"}</strong><span>Scenario status</span></div></article>
       </section>
 
       <div className="aarGrid">
@@ -76,15 +79,22 @@ export function AfterActionReviewScreen({ scenario, form, messages, busy, onRetu
         <section className="aarCard aarTranscriptCard">
           <div className="aarCardHeader">
             <div><span>Interaction evidence</span><h2>Transcript</h2></div>
-            <button className="aarTranscriptExport" type="button" onClick={exportTranscript} disabled={!messages.length}>
+            <button className="aarTranscriptExport" type="button" onClick={exportTranscript} disabled={!allMessages.length}>
               <Download size={16} />
               <span>Export</span>
             </button>
           </div>
+          <div className="aarCallTabs" role="tablist" aria-label="Conversation scores and transcripts">
+            <button className={!activeCall ? "active" : ""} type="button" onClick={() => setSelectedCallIndex(-1)}>Composite summary</button>
+            {completedCalls.map((call) => <button className={activeCall?.index === call.index ? "active" : ""} type="button" key={call.index} onClick={() => setSelectedCallIndex(call.index)}>Call {call.index + 1}: {call.role}</button>)}
+          </div>
+          {!activeCall && <div className="aarCompositeSummary">
+            {completedCalls.map((call) => <article key={call.index}><strong>Call {call.index + 1}: {call.role}</strong><span>{call.messages.filter((message) => message.role === "trainee").length} learner responses</span></article>)}
+          </div>}
           <div className="aarTranscript">
-            {messages.map((message, index) => (
+            {activeCall && visibleMessages.map((message, index) => (
               <article className={message.role} key={`${message.role}-${index}`}>
-                <span>{message.role === "trainee" ? "Learner" : scenario?.avatar_name || "Avatar"}</span>
+                <span>{message.role === "trainee" ? "Learner" : activeCall.role}</span>
                 <p>{message.text}</p>
               </article>
             ))}
