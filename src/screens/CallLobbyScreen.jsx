@@ -43,13 +43,14 @@ export function CallLobbyScreen({ scenario, characters = [], completedCalls = []
                 <span className="callAgendaAvatar">{isComplete ? <Check size={22} /> : <UserRound size={22} />}</span>
                 <div>
                   <small>Call {index + 1} of {characters.length}</small>
-                  <h2>{role}</h2>
+                  <h2>{character.characterName || role}</h2>
+                  <span className="callAgendaRole">{role}</span>
                   <p>{isComplete ? "Conversation completed." : isCurrent ? "This conversation is ready to begin." : "This call unlocks after the previous conversation."}</p>
                 </div>
               </div>
               {isCurrent ? (
                 <button className="callJoinButton" type="button" onClick={() => onJoin(index)} disabled={busy}>
-                  <Video size={18} /><span>{busy ? "Joining…" : `${index === 0 ? "Join" : "Continue to"} ${role}`}</span>
+                  <Video size={18} /><span>{busy ? "Joining…" : `${index === 0 ? "Join" : "Continue to"} ${character.characterName || role}`}</span>
                 </button>
               ) : <span className={`callUpcomingLabel ${isComplete ? "complete" : ""}`}>{isComplete ? "Done" : "Upcoming"}</span>}
             </article>

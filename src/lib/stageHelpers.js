@@ -65,6 +65,18 @@ export function activeScenarioStages(form) {
   return ensureScenarioStages(form).slice(0, stageCountFromForm(form));
 }
 
+// Additional names are stable design examples until characters have their own records.
+export function namedScenarioStages(form, scenario) {
+  const used = new Set();
+  const exampleNames = ["Alex Morgan", "Taylor Brooks", "Casey Rivera", "Jamie Chen"];
+  return activeScenarioStages(form).map((stage, index) => {
+    const supplied = stage.characterName || scenario?.characters?.[index]?.avatar_name || (index === 0 ? scenario?.avatar_name : "");
+    const characterName = supplied || exampleNames.find((name) => !used.has(name));
+    used.add(characterName);
+    return { ...stage, characterName };
+  });
+}
+
 export function personaValuesForStage(stage) {
   return [
     formValue(stage, "personaStyle", "personaStyleOther"),

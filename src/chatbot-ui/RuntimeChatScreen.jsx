@@ -1,12 +1,11 @@
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   CheckCircle2,
   MessageSquareText,
   Mic,
   MicOff,
-  PanelRightClose,
-  PanelRightOpen,
   Send,
+  Volume2,
 } from "lucide-react";
 
 // SVG adaptation of the score-driven flower used by PyPlutchik:
@@ -64,7 +63,22 @@ export function RuntimeChatScreen({
   completedCalls = [],
   onFinishCall,
 }) {
-  const [showDetails, setShowDetails] = useState(true);
+  const [showMind, setShowMind] = useState(true);
+  const [showTranscript, setShowTranscript] = useState(true);
+  const avatarCardRef = useRef(null);
+  useLayoutEffect(() => {
+    const card = avatarCardRef.current;
+    const controls = [...card.children].filter((child) => !child.classList.contains("runtimeAvatarViewport"));
+    const measure = () => card.style.setProperty("--runtime-avatar-chrome", `${controls.reduce((height, child) => {
+      const style = getComputedStyle(child);
+      return height + child.getBoundingClientRect().height + parseFloat(style.marginTop) + parseFloat(style.marginBottom);
+    }, 0)}px`);
+    const observer = new ResizeObserver(measure);
+    controls.forEach((control) => observer.observe(control));
+    measure();
+    return () => observer.disconnect();
+  }, []);
+  const showDetails = showMind || showTranscript;
   const [listening, setListening] = useState(false);
   const traineeTurns = messages.filter((item) => item.role === "trainee").length;
   const latestAvatar = [...messages].reverse().find((item) => item.role === "avatar");
@@ -116,13 +130,35 @@ export function RuntimeChatScreen({
         </div>
       )}
 
+      <div className="runtimeViewControls" aria-label="Conversation panels">
+        <span>Show panels</span>
+        <button type="button" aria-pressed={showTranscript} aria-controls="runtime-transcript" onClick={() => setShowTranscript((current) => !current)}><MessageSquareText size={16} /> Transcript</button>
+        <button type="button" aria-pressed={showMind} aria-controls="runtime-state-of-mind" onClick={() => setShowMind((current) => !current)}>State of Mind</button>
+      </div>
+
       <section className={panelClassName}>
         <div className="runtimeAvatarFocus">
-          <div className="runtimeAvatarMain">
-            <div id="unity-avatar-stage" className="runtimeAvatarStage" aria-label="Avatar display" />
+          <div className="runtimeAvatarColumn">
+          <div className="runtimeAvatarMain" ref={avatarCardRef}>
+            <div className="runtimeCharacterHeading"><span>Talking to</span><strong>{activeStage?.characterName || activeRole}</strong><small>{activeRole} · Call {activeStageIndex + 1} of {stages.length}</small></div>
+            <div className="runtimeAvatarViewport">
+              <div id="unity-avatar-stage" className="runtimeAvatarStage" aria-label="Avatar display" />
+            </div>
 
-            <div className="runtimeLiveResponse">
-              <p>{latestAvatar?.text || "The avatar response will appear here when the roleplay begins."}</p>
+            <div className="runtimeLiveResponseRow">
+              <div className="runtimeLiveResponse">
+                <span className="runtimeSpeakerLabel">{activeStage?.characterName || activeRole} just said</span>
+                <p>{latestAvatar?.text || "The avatar response will appear here when the roleplay begins."}</p>
+                <button
+                  className="runtimeReplayAudio"
+                  type="button"
+                  disabled={!latestAvatar}
+                  aria-label="Replay audio"
+                  title={latestAvatar ? "Replay the avatar's audio" : "Audio replay is available after the avatar responds"}
+                >
+                  <Volume2 size={17} />
+                </button>
+              </div>
             </div>
 
             <footer className="runtimeComposerShell">
@@ -168,6 +204,7 @@ export function RuntimeChatScreen({
               </form>
             </footer>
           </div>
+          </div>
 
           <nav className="runtimeStageSwitcher" aria-label="Call schedule">
               <div className="runtimeCalendarHeading">
@@ -187,7 +224,8 @@ export function RuntimeChatScreen({
                       disabled={busy || index !== activeStageIndex}
                     >
                       <span>Call {index + 1}</span>
-                      <small>{role || "Character"}</small>
+                      <small>{stage.characterName || role || "Character"}</small>
+                      <small>{role}</small>
                       <em>{active ? "Current call" : completedCalls.includes(index) ? "Completed" : "Not started"}</em>
                     </button>
                   </div>
@@ -197,20 +235,9 @@ export function RuntimeChatScreen({
           </nav>
         </div>
 
-        <aside className="runtimeDetailsDrawer" aria-label="Call details">
-          <button
-            className="runtimeDetailsToggle"
-            type="button"
-            onClick={() => setShowDetails((current) => !current)}
-            aria-expanded={showDetails}
-            aria-controls="runtime-details-content"
-          >
-            {showDetails ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}
-            <span>Details</span>
-          </button>
-
-          {showDetails && <div className="runtimeDetailsContent" id="runtime-details-content">
-            <section className="runtimeDetailsMind" aria-label="Avatar State of Mind">
+        {showDetails && <aside className="runtimeDetailsDrawer" aria-label="Call details">
+          <div className={`runtimeDetailsContent ${showMind && showTranscript ? "bothPanels" : "singlePanel"}`}>
+            {showMind && <section className="runtimeDetailsMind" id="runtime-state-of-mind" aria-label="Avatar State of Mind">
               <div className="runtimePanelHeader">
                 <div>
                   <p>State of Mind</p>
@@ -246,9 +273,9 @@ export function RuntimeChatScreen({
                   <circle className="emotionWheelCenter" cx="160" cy="160" r="22" />
                 </svg>
               </div>
-            </section>
+            </section>}
 
-            <section className="runtimeDetailsTranscript" aria-label="Conversation transcript">
+            {showTranscript && <section className="runtimeDetailsTranscript" id="runtime-transcript" aria-label="Conversation transcript">
               <div className="runtimePanelHeader">
                 <div>
                   <p>Transcript</p>
@@ -261,7 +288,7 @@ export function RuntimeChatScreen({
                   <article className={`runtimeMessageRow ${message.role}`} key={`${message.role}-${index}`}>
                     <div className={`runtimeBubble ${message.role}`}>
                       <span>
-                        {message.role === "avatar" ? activeRole || "Character" : "Trainee"}
+                        {message.role === "avatar" ? activeStage?.characterName || activeRole || "Character" : "You"}
                       </span>
                       <p>{message.text}</p>
                     </div>
@@ -270,9 +297,9 @@ export function RuntimeChatScreen({
                 {busy && <div className="runtimeTypingLine" aria-label="Avatar is responding"><span /><span /><span /></div>}
                 <div ref={scrollRef} />
               </div>
-            </section>
-          </div>}
-        </aside>
+            </section>}
+          </div>
+        </aside>}
       </section>
     </main>
   );

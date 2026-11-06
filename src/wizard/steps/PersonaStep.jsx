@@ -17,13 +17,14 @@ import {
   legacyPersonaPatch,
   stageCountFromForm,
   stagePersonaComplete,
+  namedScenarioStages,
 } from "../../lib/stageHelpers.js";
 
 function PersonaSelect({ label, value, options, otherValue, onChange, onOtherChange, placeholder, info }) {
   const isOther = value === "Other";
   return (
     <label className="personaSelect">
-      <span>{label}</span>
+      <span>{label} <InfoNote>{info}</InfoNote></span>
       <SelectControl value={value} onChange={(event) => onChange(event.target.value)}>
         <option value="" disabled>
           Select {label.toLowerCase()}
@@ -33,16 +34,16 @@ function PersonaSelect({ label, value, options, otherValue, onChange, onOtherCha
         ))}
       </SelectControl>
       {isOther && <input value={otherValue} onChange={(event) => onOtherChange(event.target.value)} placeholder={placeholder} />}
-      <InfoNote>{info}</InfoNote>
     </label>
   );
 }
 
-export function PersonaStep({ form, updateForm, activeStageIndex, setActiveStageIndex }) {
+export function PersonaStep({ form, scenario, updateForm, activeStageIndex, setActiveStageIndex }) {
   const stageCount = stageCountFromForm(form);
   const stages = activeScenarioStages(form);
 
   const activeStage = stages[activeStageIndex];
+  const characterName = namedScenarioStages(form, scenario)[activeStageIndex].characterName;
 
   function updateStage(patch) {
     const allStages = ensureScenarioStages(form, stageCount);
@@ -151,7 +152,7 @@ export function PersonaStep({ form, updateForm, activeStageIndex, setActiveStage
         <div className="stagePersonaBuilderHeader">
           <div>
             <span>Character {activeStageIndex + 1}</span>
-            <h3>Role &amp; Persona Builder</h3>
+            <h3>{characterName}</h3>
           </div>
           <strong className={stagePersonaComplete(activeStage) ? "complete" : ""}>
             {stagePersonaComplete(activeStage) ? "Complete" : "In progress"}
@@ -160,7 +161,7 @@ export function PersonaStep({ form, updateForm, activeStageIndex, setActiveStage
         <div className="configuredRoleSummary">
           <span>Configured role</span>
           <strong>{activeStage.chatbotRole === "Other" ? activeStage.chatbotRoleOther : activeStage.chatbotRole}</strong>
-          <small>Character roles are configured in Scenario Builder.</small>
+          <small>Manage roles and call order above. The complainant is always Call 1.</small>
         </div>
         <div className="personaControlGrid">
           <PersonaSelect
@@ -215,9 +216,8 @@ export function PersonaStep({ form, updateForm, activeStageIndex, setActiveStage
           />
         </div>
         <label className="studioField">
-          <span className="studioLabel">Chatbot Behavior Notes <em>(optional)</em></span>
+          <span className="studioLabel">Chatbot Behavior Notes <em>(optional)</em> <InfoNote>{FIELD_INFO.chatbotBehaviorNotes}</InfoNote></span>
           <textarea value={activeStage.chatbotBehaviorNotes} onChange={(event) => updateStage({ chatbotBehaviorNotes: event.target.value })} placeholder={`Optional behavior notes for how this character should speak or react in Call ${activeStageIndex + 1}`} />
-          <InfoNote>{FIELD_INFO.chatbotBehaviorNotes}</InfoNote>
         </label>
       </div>
     </div>

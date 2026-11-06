@@ -44,6 +44,17 @@ export const FACTOR_OPTIONS = [
   "Other",
 ];
 
+export const MILITARY_FACTOR_OPTIONS = ["Race", "Color", "Religion", "Sex", "National Origin", "Other"];
+
+export function factorsForDomain(domain) {
+  return domain === "Military" ? MILITARY_FACTOR_OPTIONS : FACTOR_OPTIONS;
+}
+
+export function normalizeDomainFactors(factors, domain) {
+  const allowed = factorsForDomain(domain);
+  return [...new Set(factors.map((factor) => domain === "Military" && factor === "Race/Ethnicity" ? "Race" : domain === "Civilian" && factor === "Race" ? "Race/Ethnicity" : factor))].filter((factor) => allowed.includes(factor));
+}
+
 export const COMPLEXITY_OPTIONS = [
   "Maximized Emotional Intensity",
   "Organizational and Systemic Challenges",

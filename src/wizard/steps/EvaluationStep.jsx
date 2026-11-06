@@ -3,7 +3,7 @@ import { Sparkles } from "lucide-react";
 export function EvaluationStep({ form, competencies, scenario, busy, onGenerateScenario }) {
   return (
     <div className="wizardStepBody evaluationStepBody">
-      <h2>Evaluation</h2>
+      <h2>Generate Scenario</h2>
       <p className="wizardStepIntro">Generate the shared scenario, review its summary, and regenerate it if the result needs adjustment.</p>
 
       {scenario && <div className="studioGroup generatedScenarioSummary">
@@ -19,7 +19,7 @@ export function EvaluationStep({ form, competencies, scenario, busy, onGenerateS
       </div>}
 
       <div className="scenarioGenerationCallout">
-        <div><strong>{scenario ? "Scenario generated" : "Generate the shared scenario"}</strong><p>Create the scenario after configuring the character calls, then add persona traits for each character.</p></div>
+        <div><strong>{scenario ? "Scenario generated" : "Generate the shared scenario"}</strong><p>Review the shared case here, then customize each character and call in Characters.</p></div>
         <button className="primaryButton" type="button" onClick={onGenerateScenario} disabled={busy}><Sparkles size={16} /><span>{busy ? "Generating..." : scenario ? "Regenerate Scenario" : "Generate Scenario"}</span></button>
       </div>
     </div>

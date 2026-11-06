@@ -114,7 +114,7 @@ export function competencyDetails(titles) {
 
 export function sourceReference(source) {
   if (!source) return "";
-  return ["SJT curriculum PDF", source.curriculum_scenario_id, source.source_page ? `page ${source.source_page}` : ""]
+  return [source.document_id === "civilian-design-examples" ? "Civilian scenario library" : "SJT curriculum PDF", source.curriculum_scenario_id, source.source_page ? `page ${source.source_page}` : ""]
     .filter(Boolean)
     .join(" · ");
 }

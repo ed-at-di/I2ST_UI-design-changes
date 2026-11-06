@@ -7,6 +7,8 @@ import {
   sourceReference,
 } from "../lib/scenarioHelpers.js";
 
+import { CIVILIAN_SOURCE_TEMPLATES } from "../data/sourceTemplates.js";
+
 const sessions = new Map();
 let dataPromise;
 const demoDataPath = (filename) => `${import.meta.env.BASE_URL}data/${filename}`;
@@ -40,7 +42,7 @@ async function loadData() {
     dataPromise = Promise.all([
       loadCsv(demoDataPath("generated_scenarios.csv")),
       loadCsv(demoDataPath("curriculum_scenarios.csv")),
-    ]).then(([generated, curriculum]) => ({ generated, curriculum }));
+    ]).then(([generated, curriculum]) => ({ generated, curriculum: [...curriculum, ...CIVILIAN_SOURCE_TEMPLATES] }));
   }
   return dataPromise;
 }

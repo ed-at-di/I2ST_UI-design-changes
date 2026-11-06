@@ -59,7 +59,7 @@ export function AppHeader({ wizardNavigation, runtimeSession, aarNavigation, the
         <div className="appHeaderRuntimeActions">
           <button className="danger" type="button" onClick={runtimeSession.onEndSession}>
             <PhoneOff size={16} />
-            <span>End Session</span>
+            <span>{runtimeSession.endLabel || "Finish call"}</span>
           </button>
         </div>
       )}

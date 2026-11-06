@@ -6,13 +6,12 @@ import { FIELD_INFO } from "../../data/fieldInfo.js";
 import {
   COMPLEXITY_OPTIONS,
   DOMAIN_OPTIONS,
-  FACTOR_OPTIONS,
   MILITARY_BRANCH_OPTIONS,
+  factorsForDomain,
+  normalizeDomainFactors,
 } from "../../data/scenarioOptions.js";
 import { arrayToggle } from "../../lib/scenarioHelpers.js";
 import { activeScenarioStages } from "../../lib/stageHelpers.js";
-
-const MILITARY_FACTOR_OPTIONS = ["Race/Ethnicity", "Sex", "Religion", "National Origin", "Other"];
 
 function generatedStructure(domainType, militaryBranch, stages) {
   if (!domainType) return {};
@@ -41,24 +40,24 @@ function rankForBranch(branch, index) {
   return ranks[branch]?.[index] || "";
 }
 
-export function DetailsStep({ form, updateForm, isManualSource }) {
+export function DetailsStep({ form, updateForm, isManualSource, source }) {
   const stages = activeScenarioStages(form);
   const structure = generatedStructure(form.domainType, form.militaryBranch, stages);
 
   useEffect(() => {
     if (!form.domainType || Object.entries(structure).every(([key, value]) => form[key] === value)) return;
-    updateForm(structure);
+    updateForm(structure, { preserveScenario: true });
   }, [form.domainType, form.militaryBranch, form.stageCount, stages.map((stage) => `${stage.chatbotRole}:${stage.chatbotRoleOther}`).join("|")]);
 
   function applySetup(patch, nextStages = stages) {
     const nextDomain = patch.domainType ?? form.domainType;
     const nextBranch = patch.militaryBranch ?? form.militaryBranch;
     const rankedStages = nextStages.map((stage, index) => ({ ...stage, domainTitle: nextDomain === "Military" ? rankForBranch(nextBranch, index) : "" }));
-    updateForm({ ...patch, stages: rankedStages, ...generatedStructure(nextDomain, nextBranch, rankedStages) });
+    updateForm({ ...patch, scenarioFactors: normalizeDomainFactors(form.scenarioFactors, nextDomain), stages: rankedStages, ...generatedStructure(nextDomain, nextBranch, rankedStages) });
   }
 
   function randomizeSelections() {
-    const factors = FACTOR_OPTIONS.filter((item) => item !== "Other").sort(() => Math.random() - 0.5).slice(0, 2);
+    const factors = factorsForDomain(form.domainType).filter((item) => item !== "Other").sort(() => Math.random() - 0.5).slice(0, 2);
     const complexities = COMPLEXITY_OPTIONS.filter((item) => item !== "Other").sort(() => Math.random() - 0.5).slice(0, 1);
     updateForm({ scenarioFactors: factors, scenarioComplexities: complexities });
   }
@@ -66,18 +65,18 @@ export function DetailsStep({ form, updateForm, isManualSource }) {
   return (
     <div className="wizardStepBody">
       <h2>Scenario Setup</h2>
-      <p className="wizardStepIntro">Choose the domain and scenario characteristics. Character count and call order are configured in the Characters step.</p>
+      <p className="wizardStepIntro">{isManualSource ? "Review your source scenario and add any details to shape your version. Configure character calls in Characters." : "Choose the domain and scenario characteristics. Configure character calls in Characters."}</p>
 
       <div className="studioGroup scenarioDomainSection">
         <span className="studioLabel">Scenario Domain* <InfoNote>{FIELD_INFO.scenarioDomain}</InfoNote></span>
-        <div className="domainOptionGrid">
+        {isManualSource ? <p className="fieldHelperText">{form.domainType} · Selected in Source. Return to Source to change the library.</p> : <div className="domainOptionGrid">
           {DOMAIN_OPTIONS.map((domain) => (
             <label className={`domainOption ${form.domainType === domain ? "selected" : ""}`} key={domain}>
               <input type="radio" name="scenario-domain" value={domain} checked={form.domainType === domain} onChange={() => applySetup({ domainType: domain, militaryBranch: domain === "Civilian" ? "" : form.militaryBranch })} />
               <span>{domain}</span>
             </label>
           ))}
-        </div>
+        </div>}
         {form.domainType === "Military" && (
           <label className="studioField compactField militaryBranchField">
             <span>Military Branch*</span>
@@ -89,14 +88,16 @@ export function DetailsStep({ form, updateForm, isManualSource }) {
         )}
       </div>
 
-      {!isManualSource && (
+      {isManualSource && <section className="studioGroup templateSourceSummary"><span className="studioLabel">Template scenario summary</span><p>{source?.scenario_text || "Return to Source to select a scenario."}</p></section>}
+
+      {!isManualSource && form.domainType && (
         <div className="studioGroup generatedInputsSection">
           <div className="sectionTitleRow"><span className="studioLabel">Scenario Characteristics</span><button className="secondaryButton compactActionButton" type="button" onClick={randomizeSelections}><Dices size={15} /><span>Randomize</span></button></div>
           <p className="persistentInfoNote">These structured selections shape the generated scenario while keeping the setting consistent with the selected domain.</p>
           <div className="studioGroup innerStudioGroup factorGroup">
             <span className="studioLabel">Scenario Factors <InfoNote>{FIELD_INFO.scenarioFactors}</InfoNote></span>
             <div className="checkboxGrid">
-              {(form.domainType === "Military" ? MILITARY_FACTOR_OPTIONS : FACTOR_OPTIONS).map((factor) => factor === "Other" ? (
+              {factorsForDomain(form.domainType).map((factor) => factor === "Other" ? (
                 <div className="checkRow otherRow" key={factor}><label className="otherToggle"><input type="checkbox" checked={form.scenarioFactors.includes(factor)} onChange={() => updateForm({ scenarioFactors: arrayToggle(form.scenarioFactors, factor) })} /><span>{factor}</span></label><input className="otherFactor" value={form.otherFactor} onChange={(event) => updateForm({ otherFactor: event.target.value })} disabled={!form.scenarioFactors.includes(factor)} placeholder="Other" /></div>
               ) : <label className="checkRow" key={factor}><input type="checkbox" checked={form.scenarioFactors.includes(factor)} onChange={() => updateForm({ scenarioFactors: arrayToggle(form.scenarioFactors, factor) })} /><span>{factor}</span></label>)}
             </div>

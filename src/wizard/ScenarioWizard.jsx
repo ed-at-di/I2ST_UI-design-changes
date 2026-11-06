@@ -83,18 +83,19 @@ export function ScenarioWizard({
   }
 
   return (
-    <div className="wizardShell">
+    <div className={`wizardShell ${step === 5 ? "reviewMode" : ""}`}>
       <main className="wizardWorkspace">
         <section className="wizardBuilderColumn">
           <div className="wizardCard">
-            {step === 0 && <SourceStep updateForm={updateForm} catalog={catalog} source={source} />}
+            {step === 0 && <SourceStep form={form} updateForm={updateForm} catalog={catalog} source={source} />}
             {step === 1 && <RoleFocusStep form={form} updateForm={updateForm} competencies={competencies} />}
-            {step === 2 && <DetailsStep form={form} updateForm={updateForm} isManualSource={isManualSource} />}
+            {step === 2 && <DetailsStep form={form} updateForm={updateForm} isManualSource={isManualSource} source={source} />}
             {step === 3 && <EvaluationStep form={form} updateForm={updateForm} competencies={competencies} scenario={scenario} busy={busy || loading} onGenerateScenario={onRegenerate} />}
             {step === 4 && (
               <PersonaStep
                 form={form}
-                updateForm={updateForm}
+                scenario={scenario}
+                updateForm={(patch) => updateForm(patch, { preserveScenario: true })}
                 activeStageIndex={activeStageIndex}
                 setActiveStageIndex={setActiveStageIndex}
               />
@@ -112,6 +113,7 @@ export function ScenarioWizard({
                 onRegenerate={onRegenerate}
                 onExport={onExport}
                 onStartChat={onStartChat}
+                onBack={goBack}
                 copyMustBeSaved={creationMode === "existing" && !existingCopySaved}
                 isExistingCopy={creationMode === "existing"}
                 copyName={existingCopyName}
@@ -135,18 +137,10 @@ export function ScenarioWizard({
                 </button>
               </div>
             )}
-            {isLastStep && (
-              <div className="wizardFooter">
-                <button className="secondaryButton" type="button" onClick={goBack}>
-                  <ChevronLeft size={16} />
-                  <span>Back</span>
-                </button>
-              </div>
-            )}
           </div>
         </section>
 
-        <ScenarioPreviewPanel
+        {step !== 5 && <ScenarioPreviewPanel
           wizardStep={step}
           activeStageIndex={activeStageIndex}
           setActiveStageIndex={setActiveStageIndex}
@@ -163,7 +157,7 @@ export function ScenarioWizard({
           originalName={existingOriginalName}
           onNavigate={setStep}
           visibleSteps={visitedSteps}
-        />
+        />}
       </main>
     </div>
   );

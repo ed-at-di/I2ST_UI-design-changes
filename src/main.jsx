@@ -8,8 +8,9 @@ import { LoginScreen } from "./screens/LoginScreen.jsx";
 import { AfterActionReviewScreen } from "./screens/AfterActionReviewScreen.jsx";
 import { CallLobbyScreen } from "./screens/CallLobbyScreen.jsx";
 import { ScenarioWizard, STEPS, wizardStepsForMode } from "./wizard/ScenarioWizard.jsx";
-import { COMPETENCY_OPTIONS, DEFAULT_FORM, NEW_SCENARIO_FORM } from "./data/scenarioOptions.js";
+import { COMPETENCY_OPTIONS, DEFAULT_FORM, NEW_SCENARIO_FORM, normalizeDomainFactors } from "./data/scenarioOptions.js";
 import { demoApi, demoUiApi } from "./demo/demoApi.js";
+import { CIVILIAN_SOURCE_TEMPLATES, sourceDomain } from "./data/sourceTemplates.js";
 import {
   competencyDetails,
   firstSource,
@@ -22,7 +23,7 @@ import {
   sourceLabel,
   writeScenarioWorkbook,
 } from "./lib/scenarioHelpers.js";
-import { activeScenarioStages, stageCountFromForm } from "./lib/stageHelpers.js";
+import { activeScenarioStages, namedScenarioStages, stageCountFromForm } from "./lib/stageHelpers.js";
 import "@fontsource-variable/atkinson-hyperlegible-next/wght.css";
 import "@fontsource-variable/atkinson-hyperlegible-next/wght-italic.css";
 import "./styles.css";
@@ -113,8 +114,8 @@ function App() {
     setExistingCopyDirty(false);
   }
 
-  function updateForm(patch) {
-    if (creationMode === "existing" && view === "wizard") {
+  function updateForm(patch, { preserveScenario = false } = {}) {
+    if (view === "wizard") {
       if (patch.curriculumScenarioId) {
         const selectedSource = catalog.curriculumScenarios.find(
           (item) => item.curriculum_scenario_id === patch.curriculumScenarioId
@@ -126,7 +127,7 @@ function App() {
       }
     }
     setForm((current) => ({ ...current, ...patch }));
-    setScenario(null);
+    if (!preserveScenario) setScenario(null);
     setSession(null);
     setMessages([]);
     setStatus("");
@@ -147,7 +148,7 @@ function App() {
         loadLocalCurriculumRows(),
       ]);
       setHealth(healthResult);
-      const curriculumScenarios = localCurriculumRows.length ? localCurriculumRows : catalogResult.curriculumScenarios || [];
+      const curriculumScenarios = [...(localCurriculumRows.length ? localCurriculumRows : catalogResult.curriculumScenarios || []), ...CIVILIAN_SOURCE_TEMPLATES];
       setCatalog({
         ...catalogResult,
         curriculumScenarios,
@@ -195,7 +196,7 @@ function App() {
       evaluationKpa: form.selectedKpa,
       evaluationCompetencyFocuses: COMPETENCY_OPTIONS.map((option) => option.title),
       curriculumScenarioId: isManualSource ? form.curriculumScenarioId || source?.curriculum_scenario_id || "" : "",
-      scenarioName: creationMode === "existing" ? existingCopyName.trim() : "",
+      scenarioName: existingCopyName.trim(),
     };
   }
 
@@ -205,6 +206,7 @@ function App() {
     return {
       ...baseScenario,
       role: role || baseScenario.role,
+      avatar_name: namedScenarioStages(form, baseScenario)[stageIndex]?.characterName || baseScenario.avatar_name,
       active_stage_index: stageIndex,
       active_stage_name: stage.name || `Stage ${stageIndex + 1}`,
       persona: {
@@ -225,7 +227,7 @@ function App() {
       method: "POST",
       body: JSON.stringify(payloadFromForm()),
     });
-    if (creationMode !== "existing" || !existingCopyName.trim()) return result;
+    if (!existingCopyName.trim()) return result;
     return {
       ...result,
       title: existingCopyName.trim(),
@@ -244,6 +246,7 @@ function App() {
     try {
       const result = await requestScenarioPacket();
       setScenario(result);
+      if (!existingCopyName.trim()) setExistingCopyName(result.title || "Untitled scenario");
       const elapsed = Math.max(1, Math.round(performance.now() - started));
       setStatus(isManualSource ? `Source scenario loaded in ${elapsed} ms` : `Scenario generated in ${elapsed} ms`);
       return result;
@@ -288,6 +291,7 @@ function App() {
     setMessages([]);
     try {
       setRuntimeStageRuns({});
+      setCompletedCallIndexes([]);
       setRuntimeStageIndex(0);
       let activeScenario = scenario;
       if (!activeScenario) {
@@ -317,6 +321,8 @@ function App() {
       }
       setSession(null);
       setMessages([]);
+      setRuntimeStageRuns({});
+      setRuntimeStageIndex(0);
       setCompletedCallIndexes([]);
       setView("lobby");
     } catch (err) {
@@ -364,6 +370,7 @@ function App() {
       setInput("");
       setError("");
       setStatus(`Returned to Call ${nextStageIndex + 1}`);
+      setView("runtime");
       return;
     }
 
@@ -465,8 +472,8 @@ function App() {
   }
 
   function startFromExistingScenario() {
-    const initialSource = catalog.curriculumScenarios[0];
-    resetForm({ sourceScenarioMode: "manual" });
+    const initialSource = catalog.curriculumScenarios.find((item) => sourceDomain(item) === "Civilian");
+    resetForm({ sourceScenarioMode: "manual", domainType: "Civilian", curriculumScenarioId: initialSource?.curriculum_scenario_id || "", scenarioFactors: normalizeDomainFactors([initialSource?.category || ""], "Civilian"), scenarioComplexities: [] });
     setCreationMode("existing");
     prepareExistingCopy(sourceLabel(initialSource, catalog.curriculumScenarios));
     setWizardStep(0);
@@ -477,6 +484,7 @@ function App() {
 
   async function openAssignedScenario(item) {
     const activeScenario = scenarioFromCatalogItem(item);
+    resetForm();
     setError("");
     setMessages([]);
     setScenario(activeScenario);
@@ -489,7 +497,7 @@ function App() {
     setExistingCopyName(value);
     setExistingCopySaved(false);
     setExistingCopyDirty(true);
-    setScenario(null);
+    setScenario((current) => current ? { ...current, title: value, preview: { ...current.preview, scenarioTitle: value } } : current);
     setSession(null);
     setMessages([]);
     setStatus("");
@@ -574,11 +582,12 @@ function App() {
         stepLabel: session ? "In chat" : `Step ${draftStepIndex + 1} of ${draftSteps.length} · ${STEPS[wizardStep]?.label}`,
       }
     : null;
-  const reviewCalls = activeScenarioStages(form).map((stage, index) => {
+  const reviewCalls = namedScenarioStages(form, scenario).map((stage, index) => {
     const savedRun = runtimeStageRuns[index];
     const callMessages = index === runtimeStageIndex ? messages : savedRun?.messages || [];
     return {
       index,
+      characterName: stage.characterName,
       role: (stage.chatbotRole === "Other" ? stage.chatbotRoleOther : stage.chatbotRole) || `Character ${index + 1}`,
       messages: callMessages,
     };
@@ -588,7 +597,7 @@ function App() {
   if (view === "login") {
     body = <LoginScreen onLogin={signIn} theme={theme} />;
   } else if (view === "runtime" && session) {
-    const runtimeStages = activeScenarioStages(form);
+    const runtimeStages = namedScenarioStages(form, scenario);
     body = (
       <RuntimeChatScreen
         busy={busy}
@@ -611,7 +620,7 @@ function App() {
     body = (
       <CallLobbyScreen
         scenario={scenario}
-        characters={activeScenarioStages(form)}
+        characters={namedScenarioStages(form, scenario)}
         completedCalls={completedCallIndexes}
         busy={busy}
         onJoin={joinScheduledCall}
@@ -687,9 +696,10 @@ function App() {
               ? {
                   title: scenario?.title || scenario?.preview?.scenarioTitle || "Scenario session",
                   stageLabel: `Call ${runtimeStageIndex + 1} of ${activeScenarioStages(form).length} · ${(() => {
-                    const stage = activeScenarioStages(form)[runtimeStageIndex];
-                    return (stage?.chatbotRole === "Other" ? stage.chatbotRoleOther : stage?.chatbotRole) || "Avatar";
+                    const stage = namedScenarioStages(form, scenario)[runtimeStageIndex];
+                    return `${stage.characterName} · ${(stage?.chatbotRole === "Other" ? stage.chatbotRoleOther : stage?.chatbotRole) || "Character"}`;
                   })()}`,
+                  endLabel: runtimeStageIndex === activeScenarioStages(form).length - 1 ? "Finish & review" : "Finish call",
                   onEndSession: finishRuntimeCall,
                 }
               : undefined

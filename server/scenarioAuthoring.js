@@ -3,6 +3,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { scenarioAuthoringInstructions } from "./prompts/scenarioAuthoringPrompt.js";
+import { CIVILIAN_SOURCE_TEMPLATES } from "../src/data/sourceTemplates.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DATA_DIR = path.join(ROOT, "public", "data");
@@ -349,7 +350,7 @@ function assignAvatarName(payload, sourceRow = null, generated = null) {
 
 function sourceReference(row) {
   if (!row) return "";
-  return ["SJT curriculum PDF", row.curriculum_scenario_id, row.source_page ? `page ${row.source_page}` : ""].filter(Boolean).join(" · ");
+  return [row.document_id === "civilian-design-examples" ? "Civilian scenario library" : "SJT curriculum PDF", row.curriculum_scenario_id, row.source_page ? `page ${row.source_page}` : ""].filter(Boolean).join(" · ");
 }
 
 function findSourceRow(payload, rows) {
@@ -705,7 +706,7 @@ async function callScenarioLlm(payload, generatedSeed, generatedExamples, repair
 }
 
 async function generateScenario(payload) {
-  const curriculumRows = readCsv("curriculum_scenarios.csv");
+  const curriculumRows = [...readCsv("curriculum_scenarios.csv"), ...CIVILIAN_SOURCE_TEMPLATES];
   const generatedRows = readCsv("generated_scenarios.csv");
   const persona = personaFromPayload(payload);
   if (clean(payload.sourceScenarioMode) === "manual") {

@@ -116,7 +116,7 @@ export function ScenarioPreviewPanel({
                 <p>
                   {copySaved
                     ? "Continue to generate the final scenario packet."
-                    : `The original “${originalName || "library scenario"}” stays unchanged. Rename and save this copy in Review & Launch.`}
+                    : `The original “${originalName || "library scenario"}” stays unchanged. You can optionally name and save your copy in Review.`}
                 </p>
               </div>
             </div>
