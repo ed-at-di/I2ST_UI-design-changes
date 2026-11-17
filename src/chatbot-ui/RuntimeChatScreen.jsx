@@ -1,9 +1,11 @@
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   CheckCircle2,
   MessageSquareText,
   Mic,
   MicOff,
+  PanelRightClose,
+  PanelRightOpen,
   Send,
   Volume2,
 } from "lucide-react";
@@ -65,27 +67,13 @@ export function RuntimeChatScreen({
 }) {
   const [showMind, setShowMind] = useState(true);
   const [showTranscript, setShowTranscript] = useState(true);
-  const avatarCardRef = useRef(null);
-  useLayoutEffect(() => {
-    const card = avatarCardRef.current;
-    const controls = [...card.children].filter((child) => !child.classList.contains("runtimeAvatarViewport"));
-    const measure = () => card.style.setProperty("--runtime-avatar-chrome", `${controls.reduce((height, child) => {
-      const style = getComputedStyle(child);
-      return height + child.getBoundingClientRect().height + parseFloat(style.marginTop) + parseFloat(style.marginBottom);
-    }, 0)}px`);
-    const observer = new ResizeObserver(measure);
-    controls.forEach((control) => observer.observe(control));
-    measure();
-    return () => observer.disconnect();
-  }, []);
-  const showDetails = showMind || showTranscript;
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const showDetails = drawerOpen;
   const [listening, setListening] = useState(false);
   const traineeTurns = messages.filter((item) => item.role === "trainee").length;
   const latestAvatar = [...messages].reverse().find((item) => item.role === "avatar");
   const activeStage = stages[activeStageIndex];
   const activeRole = activeStage?.chatbotRole === "Other" ? activeStage.chatbotRoleOther : activeStage?.chatbotRole;
-  const nextStage = stages[activeStageIndex + 1];
-  const nextRole = nextStage?.chatbotRole === "Other" ? nextStage.chatbotRoleOther : nextStage?.chatbotRole;
   const isLastCall = activeStageIndex >= stages.length - 1;
   const panelClassName = [
     "runtimeExperience",
@@ -130,19 +118,21 @@ export function RuntimeChatScreen({
         </div>
       )}
 
-      <div className="runtimeViewControls" aria-label="Conversation panels">
-        <span>Show panels</span>
-        <button type="button" aria-pressed={showTranscript} aria-controls="runtime-transcript" onClick={() => setShowTranscript((current) => !current)}><MessageSquareText size={16} /> Transcript</button>
-        <button type="button" aria-pressed={showMind} aria-controls="runtime-state-of-mind" onClick={() => setShowMind((current) => !current)}>State of Mind</button>
-      </div>
+      {!drawerOpen && (
+        <button className="runtimeDrawerLauncher" type="button" onClick={() => setDrawerOpen(true)} aria-label="Open conversation panels" title="Open conversation panels">
+          <PanelRightOpen size={20} />
+        </button>
+      )}
 
       <section className={panelClassName}>
         <div className="runtimeAvatarFocus">
           <div className="runtimeAvatarColumn">
-          <div className="runtimeAvatarMain" ref={avatarCardRef}>
+          <div className="runtimeAvatarMain">
             <div className="runtimeCharacterHeading"><span>Talking to</span><strong>{activeStage?.characterName || activeRole}</strong><small>{activeRole} · Call {activeStageIndex + 1} of {stages.length}</small></div>
-            <div className="runtimeAvatarViewport">
-              <div id="unity-avatar-stage" className="runtimeAvatarStage" aria-label="Avatar display" />
+            <div className="runtimeAvatarEnvironment">
+              <div className="runtimeAvatarViewport">
+                <div id="unity-avatar-stage" className="runtimeAvatarStage" aria-label="Avatar display" />
+              </div>
             </div>
 
             <div className="runtimeLiveResponseRow">
@@ -162,13 +152,6 @@ export function RuntimeChatScreen({
             </div>
 
             <footer className="runtimeComposerShell">
-              <div className="runtimeSessionStrip">
-                <span>Turn {Math.max(1, traineeTurns + 1)}</span>
-                <button className="runtimeCallAdvance" type="button" onClick={onFinishCall} disabled={busy}>
-                  <CheckCircle2 size={16} />
-                  <span>{isLastCall ? "Finish call and view assessment" : `Finish call and continue to ${nextRole || `Character ${activeStageIndex + 2}`}`}</span>
-                </button>
-              </div>
               <form className="runtimeComposer" onSubmit={sendTurn}>
                 <div className="runtimeDraftField">
                   <div className="runtimeDraftLabelRow">
@@ -217,7 +200,7 @@ export function RuntimeChatScreen({
                 return (
                   <div className="runtimeCalendarSlot" key={stage.id || index}>
                     <button
-                      className={`${active ? "active" : ""} ${completedCalls.includes(index) ? "complete" : ""}`.trim()}
+                      className={`runtimeCallCard ${active ? "active" : ""} ${completedCalls.includes(index) ? "complete" : ""}`.trim()}
                       type="button"
                       aria-current={active ? "step" : undefined}
                       onClick={() => index === activeStageIndex && onSelectStage?.(index)}
@@ -228,6 +211,12 @@ export function RuntimeChatScreen({
                       <small>{role}</small>
                       <em>{active ? "Current call" : completedCalls.includes(index) ? "Completed" : "Not started"}</em>
                     </button>
+                    {active && (
+                      <button className="runtimeCallAdvance" type="button" onClick={onFinishCall} disabled={busy}>
+                        <CheckCircle2 size={16} />
+                        <span>{isLastCall ? "Finish call and view assessment" : `Finish call and go to Call ${index + 2}`}</span>
+                      </button>
+                    )}
                   </div>
                 );
               })}
@@ -236,6 +225,15 @@ export function RuntimeChatScreen({
         </div>
 
         {showDetails && <aside className="runtimeDetailsDrawer" aria-label="Call details">
+          <div className="runtimeDrawerHeader">
+            <div className="runtimeDrawerPanelToggles" aria-label="Drawer panels">
+              <button type="button" aria-pressed={showTranscript} aria-controls="runtime-transcript" onClick={() => setShowTranscript((current) => !current)}><MessageSquareText size={16} /> Transcript</button>
+              <button type="button" aria-pressed={showMind} aria-controls="runtime-state-of-mind" onClick={() => setShowMind((current) => !current)}>State of Mind</button>
+            </div>
+            <button className="runtimeDrawerClose" type="button" onClick={() => setDrawerOpen(false)} aria-label="Close conversation panels" title="Close conversation panels">
+              <PanelRightClose size={20} />
+            </button>
+          </div>
           <div className={`runtimeDetailsContent ${showMind && showTranscript ? "bothPanels" : "singlePanel"}`}>
             {showMind && <section className="runtimeDetailsMind" id="runtime-state-of-mind" aria-label="Avatar State of Mind">
               <div className="runtimePanelHeader">

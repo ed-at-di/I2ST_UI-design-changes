@@ -181,8 +181,7 @@ input[type="radio"] {
 
 .loginField input:focus {
   border-color: #078da2;
-  outline: 3px solid rgba(7, 141, 162, 0.14);
-  outline-offset: 0;
+  outline: none;
 }
 
 .loginOptions {
@@ -854,6 +853,55 @@ input[type="radio"] {
   opacity: 0.78;
 }
 
+.scenarioParticipantCardHeader,
+.personaSelect { position: relative; }
+
+.missingFieldWarning {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  right: 0;
+  width: 26px;
+  height: 26px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(255, 173, 21, 0.58);
+  border-radius: 50%;
+  background: #fff8e9;
+  color: #a56600;
+  cursor: help;
+  line-height: 0;
+}
+
+.missingFieldWarning > svg { display: block; }
+
+.missingFieldWarning > span {
+  position: absolute;
+  z-index: 5;
+  right: -1px;
+  bottom: calc(100% + 8px);
+  width: max-content;
+  max-width: 260px;
+  padding: 7px 9px;
+  border: 1px solid #e4bd70;
+  border-radius: 6px;
+  background: #fffaf0;
+  box-shadow: 0 6px 18px rgba(58, 42, 12, 0.14);
+  color: #704600;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(3px);
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.missingFieldWarning:hover > span,
+.missingFieldWarning:focus > span { opacity: 1; visibility: visible; transform: translateY(0); }
+.personaSelect > .missingFieldWarning { top: -3px; }
+
 .stagePersonaBuilder {
   border-radius: var(--surface-radius);
 }
@@ -1015,6 +1063,7 @@ input[type="radio"] {
 .stageSetupHeader, .scenarioParticipantCardHeader { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .participantCountField, .militaryBranchField { max-width: 340px; margin-top: 12px; }
 .scenarioParticipantGrid, .generatedStructureGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+.characterStepCallSetup .scenarioParticipantGrid { grid-template-columns: 1fr; }
 .scenarioParticipantCard { padding: 14px; display: grid; gap: 10px; border: 1px solid #dce5e9; border-radius: 8px; background: #fff; }
 .scenarioParticipantCard > strong { color: #26333e; font-size: 14px; }
 .scenarioParticipantCardHeader > strong { color: #26333e; font-size: 14px; }
@@ -1172,8 +1221,7 @@ select:focus,
 input:focus,
 textarea:focus {
   border-color: #0d94a9;
-  outline: 2px solid #0d94a9;
-  outline-offset: 2px;
+  outline: none;
 }
 
 .otherRow {
@@ -1727,7 +1775,7 @@ textarea:focus {
   min-width: 0;
 }
 
-.runtimeCalendarSlot button {
+.runtimeCalendarSlot .runtimeCallCard {
   position: relative;
   width: 100%;
   min-width: 0;
@@ -1744,35 +1792,35 @@ textarea:focus {
   overflow: hidden;
 }
 
-.runtimeCalendarSlot button:hover:not(:disabled) {
+.runtimeCalendarSlot .runtimeCallCard:hover:not(:disabled) {
   border-color: #66bdcd;
   background: #eef9fa;
 }
 
-.runtimeCalendarSlot button.active {
+.runtimeCalendarSlot .runtimeCallCard.active {
   border-color: #078da2;
   background: #e7f6f8;
   color: #075f70;
   box-shadow: 0 0 0 1px #078da2;
 }
 
-.runtimeCalendarSlot button.complete {
+.runtimeCalendarSlot .runtimeCallCard.complete {
   border-color: #93cbb8;
   background: #edf9f3;
   color: #167156;
 }
 
-.runtimeCalendarSlot button:focus-visible {
+.runtimeCalendarSlot .runtimeCallCard:focus-visible {
   outline: 3px solid rgba(7, 141, 162, 0.22);
   outline-offset: 2px;
 }
 
-.runtimeCalendarSlot button > span {
+.runtimeCalendarSlot .runtimeCallCard > span {
   font-size: 13px;
   font-weight: 900;
 }
 
-.runtimeCalendarSlot button small {
+.runtimeCalendarSlot .runtimeCallCard small {
   overflow: hidden;
   font-size: 11.5px;
   font-weight: 750;
@@ -1780,7 +1828,7 @@ textarea:focus {
   white-space: nowrap;
 }
 
-.runtimeCalendarSlot button em {
+.runtimeCalendarSlot .runtimeCallCard em {
   margin-top: 3px;
   color: #7a8791;
   font-size: 10px;
@@ -1981,29 +2029,23 @@ textarea:focus {
   background: #ffffff;
 }
 
-.runtimeSessionStrip {
-  padding: 0 0 12px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 14px;
-  color: #72808a;
-  font-size: 12.5px;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
 .runtimeCallAdvance {
+  width: 100%;
+  margin-top: 8px;
   padding: 8px 12px;
   display: inline-flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 7px;
   border: 1px solid #a8d5c5;
   border-radius: 7px;
   background: #edf9f3;
   color: #12664e;
-  font: inherit;
+  font-size: 12px;
+  font-weight: 850;
+  text-align: left;
   text-transform: none;
+  cursor: pointer;
 }
 
 .runtimeCallAdvance:hover:not(:disabled) {
@@ -2953,7 +2995,7 @@ textarea:focus {
 
 .existingCopyControls input:focus {
   border-color: #078da2;
-  outline: 3px solid rgba(7, 141, 162, 0.12);
+  outline: none;
 }
 
 .existingCopyControls .primaryButton {
@@ -4044,8 +4086,7 @@ textarea:focus {
     margin-left: 0;
   }
 
-  .reviewActions,
-  .runtimeSessionStrip {
+  .reviewActions {
     align-items: stretch;
     grid-template-columns: 1fr;
     flex-direction: column;
@@ -4421,7 +4462,6 @@ textarea:focus {
 .appShell[data-theme="dark"] .runtimeMessageRow time,
 .appShell[data-theme="dark"] .runtimeDraftLabelRow label,
 .appShell[data-theme="dark"] .runtimeDraftLabelRow span,
-.appShell[data-theme="dark"] .runtimeSessionStrip,
 .appShell[data-theme="dark"] .aarHero p,
 .appShell[data-theme="dark"] .aarFocusList dd,
 .appShell[data-theme="dark"] .aarReflectionCard ol,
@@ -4727,6 +4767,18 @@ textarea:focus {
   color: #93a7af;
 }
 
+.appShell[data-theme="dark"] .missingFieldWarning {
+  border-color: rgba(255, 173, 21, 0.58);
+  background: #3a2d16;
+  color: #ffd17b;
+}
+
+.appShell[data-theme="dark"] .missingFieldWarning > span {
+  border-color: #80602a;
+  background: #2e271a;
+  color: #ffe0a3;
+}
+
 .appShell[data-theme="dark"] .stagePersonaBuilderHeader > strong,
 .appShell[data-theme="dark"] .livePreviewTags span,
 .appShell[data-theme="dark"] .runtimeStageHeader > span,
@@ -4944,24 +4996,38 @@ textarea:focus {
 .sourceDomainPicker legend { margin-bottom: 12px; }
 .sourceCopyNotice { margin: 0; padding: 14px 16px; border: 1px solid #ecdba6; border-radius: 10px; background: #fffbef; color: #75602a; font-size: 13px; line-height: 1.55; }
 .templateSourceSummary p { color: #52636e; font-size: 15px; line-height: 1.6; }
-.personaSelect > span { display: inline-flex; align-items: center; gap: 7px; }
+.personaSelect > span:not(.missingFieldWarning) { display: inline-flex; align-items: center; gap: 7px; }
 .callAgendaRole { display: block; margin: 5px 0 0; color: #667783; font-size: 14px; font-weight: 650; }
-.runtimeScreen { grid-template-rows: auto minmax(0, 1fr); }
-.runtimeScreen.hasError { grid-template-rows: auto auto minmax(0, 1fr); }
-.runtimeViewControls { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
-.runtimeViewControls > span { margin-right: 5px; color: #667783; font-size: 12px; font-weight: 700; }
-.runtimeViewControls button { min-height: 36px; padding: 8px 12px; display: inline-flex; align-items: center; gap: 7px; border: 1px solid #d7e1e5; border-radius: 8px; color: #52636e; background: #fff; font-size: 13px; font-weight: 750; }
-.runtimeViewControls button[aria-pressed="true"] { background: #eaf7fa; color: #067f92; border-color: #8fcbd5; }
-.runtimeViewControls button:focus-visible { outline: 3px solid #078da2; outline-offset: 2px; }
+.runtimeScreen { grid-template-rows: minmax(0, 1fr); }
+.runtimeScreen.hasError { grid-template-rows: auto minmax(0, 1fr); }
+.runtimeDrawerLauncher {
+  position: absolute;
+  z-index: 21;
+  top: 16px;
+  right: 16px;
+  width: 42px;
+  height: 42px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid #cddae0;
+  border-radius: 9px;
+  background: #fff;
+  color: #52636e;
+  cursor: pointer;
+}
+.runtimeDrawerLauncher:hover { border-color: #7bcde0; background: #eef9fa; color: #078da2; }
+.runtimeDrawerLauncher:focus-visible,
+.runtimeDrawerClose:focus-visible,
+.runtimeDrawerPanelToggles button:focus-visible { outline: 3px solid rgba(7, 141, 162, .24); outline-offset: 2px; }
 .runtimeExperience.detailsClosed { grid-template-columns: minmax(480px, 1fr) minmax(360px, 430px); grid-template-areas: "avatar details"; }
 .runtimeDetailsDrawer { grid-template-rows: minmax(0, 1fr); }
 .runtimeDetailsContent.bothPanels { grid-template-rows: 340px minmax(320px, 1fr); }
 .runtimeDetailsContent.bothPanels .emotionWheel { width: 260px; max-width: 100%; height: 260px; }
 .runtimeDetailsContent.singlePanel { grid-template-rows: minmax(0, 1fr); }
-.runtimeCharacterHeading { display: grid; gap: 4px; padding: 15px 20px; border-bottom: 1px solid #dbe5e8; }
+.runtimeCharacterHeading { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 18px; padding: 15px 20px; border-bottom: 1px solid #dbe5e8; }
 .runtimeCharacterHeading > span { color: #71808a; font-size: 11px; font-weight: 800; text-transform: uppercase; }
-.runtimeCharacterHeading strong { color: #26333e; font-size: 20px; }
-.runtimeCharacterHeading small { color: #667783; font-size: 12px; }
+.runtimeCharacterHeading strong { grid-column: 1; color: #26333e; font-size: 20px; }
+.runtimeCharacterHeading small { grid-column: 2; grid-row: 1 / 3; align-self: center; color: #667783; font-size: 12px; text-align: right; }
 .runtimeSpeakerLabel { display: block; margin-bottom: 8px; color: #067f92; font-size: 12px; font-weight: 800; }
 .runtimeAvatarStage { aspect-ratio: 16 / 9; }
 .appShell[data-theme="dark"] .sourceCopyNotice { border-color: #665532; background: #302c23; color: #e2ca8b; }
@@ -4969,12 +5035,9 @@ textarea:focus {
 .appShell[data-theme="dark"] .callAgendaRole,
 .appShell[data-theme="dark"] .runtimeCharacterHeading small,
 .appShell[data-theme="dark"] .runtimeCharacterHeading > span,
-.appShell[data-theme="dark"] .runtimeViewControls > span { color: #a4bac4; }
 .appShell[data-theme="dark"] .runtimeCharacterHeading { border-color: #294753; }
 .appShell[data-theme="dark"] .runtimeCharacterHeading strong { color: #e5eff3; }
 .appShell[data-theme="dark"] .runtimeSpeakerLabel { color: #65cedb; }
-.appShell[data-theme="dark"] .runtimeViewControls button { background: #102b36; color: #b6c8d1; border-color: #294753; }
-.appShell[data-theme="dark"] .runtimeViewControls button[aria-pressed="true"] { background: #183e49; color: #65cedb; border-color: #368391; }
 @media (max-width: 1100px) {
   .runtimeExperience, .runtimeExperience.detailsClosed { height: auto; grid-template-rows: auto; overflow: visible; }
   .runtimeAvatarFocus { min-height: 0; }
@@ -4990,44 +5053,144 @@ textarea:focus {
   .reviewCharacterFacts { grid-template-columns: 1fr; }
   .reviewDocumentSection.calls li { grid-template-columns: 32px minmax(0, 1fr); gap: 10px; }
   .reviewDocumentSection.calls li > strong { font-size: 24px; }
-  .runtimeViewControls { justify-content: flex-start; }
 }
 
-/* Keep the conversation controls in view; only message content scrolls. */
+/* Keep the avatar workspace fixed; details open as an independent overlay drawer. */
 .runtimeScreen { height: calc(100dvh - 78px); padding: 16px; overflow: hidden; }
-.runtimeExperience, .runtimeExperience.detailsClosed { min-height: 0; height: 100%; overflow: hidden; grid-template-rows: minmax(0, 1fr); }
-.runtimeAvatarFocus { min-height: 0; height: 100%; align-self: stretch; align-items: stretch; }
-.runtimeAvatarMain { display: flex; flex-direction: column; min-height: 0; height: 100%; overflow: hidden; }
+.runtimeExperience,
+.runtimeExperience.detailsClosed,
+.runtimeExperience.detailsOpen {
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: "avatar";
+}
+.runtimeAvatarFocus {
+  width: calc(100% - 444px);
+  min-height: 0;
+  height: 100%;
+  align-self: stretch;
+  align-items: start;
+  overflow: hidden;
+}
+.runtimeAvatarMain { display: flex; flex-direction: column; min-height: 0; height: auto; overflow: hidden; }
 .runtimeCharacterHeading, .runtimeLiveResponseRow, .runtimeComposerShell { flex: 0 0 auto; }
-.runtimeAvatarColumn { min-width: 0; min-height: 0; height: 100%; container-type: size; display: flex; align-items: flex-start; justify-content: center; }
-.runtimeAvatarColumn .runtimeAvatarMain { height: auto; width: 100%; flex: none; border: 0; border-radius: 0; background: transparent; }
-.runtimeAvatarViewport { flex: 0 0 auto; min-height: 0; min-width: 0; width: min(100cqw, max(0px, calc((100cqh - var(--runtime-avatar-chrome, 320px)) * 16 / 9))); aspect-ratio: 16 / 9; align-self: center; display: flex; overflow: hidden; }
-.runtimeAvatarColumn .runtimeCharacterHeading { border: 1px solid #d7e1e5; border-radius: var(--surface-radius); background: #fff; margin-bottom: 8px; }
-.runtimeAvatarColumn .runtimeComposerShell { border: 1px solid #d7e1e5; border-radius: var(--surface-radius); }
-.runtimeAvatarViewport { border-radius: var(--surface-radius); }
-.appShell[data-theme="dark"] .runtimeAvatarColumn .runtimeAvatarMain { background: transparent; }
-.appShell[data-theme="dark"] .runtimeAvatarColumn .runtimeCharacterHeading { background: #102b36; border-color: #294753; }
+.runtimeAvatarColumn { min-width: 0; min-height: 0; height: auto; display: flex; align-items: flex-start; justify-content: center; }
+.runtimeAvatarColumn .runtimeAvatarMain {
+  height: auto;
+  width: 100%;
+  flex: none;
+  border: 1px solid #d7e1e5;
+  border-radius: var(--surface-radius);
+  background: #fff;
+  overflow: hidden;
+}
+.runtimeAvatarEnvironment {
+  padding: 22px;
+  display: flex;
+  justify-content: center;
+  background: #17232d;
+}
+.runtimeAvatarViewport { flex: 0 0 auto; min-height: 0; min-width: 0; width: min(100%, 540px); aspect-ratio: 16 / 9; align-self: center; display: flex; overflow: hidden; }
+.runtimeAvatarColumn .runtimeCharacterHeading {
+  margin: 0;
+  border: 0;
+  border-bottom: 1px solid #e1e8eb;
+  border-radius: 0;
+  background: transparent;
+}
+.runtimeAvatarColumn .runtimeComposerShell {
+  border: 0;
+  border-top: 1px solid #e1e8eb;
+  border-radius: 0;
+  background: transparent;
+}
+.runtimeAvatarViewport { border-radius: 0; }
+.appShell[data-theme="dark"] .runtimeAvatarColumn .runtimeAvatarMain { border-color: #294753; background: #102b36; }
+.appShell[data-theme="dark"] .runtimeAvatarColumn .runtimeCharacterHeading,
+.appShell[data-theme="dark"] .runtimeAvatarColumn .runtimeComposerShell { background: transparent; border-color: #294753; }
 .runtimeAvatarViewport .runtimeAvatarStage { flex: none; width: 100%; height: 100%; max-height: none; aspect-ratio: 16 / 9; border: 0; }
 .runtimeLiveResponseRow { padding: 16px 20px; }
 .runtimeLiveResponse p { max-height: min(94px, 12dvh); }
-.runtimeDraftField textarea { height: 86px; min-height: 86px; max-height: 86px; resize: none; overflow-y: auto; }
-.runtimeDetailsDrawer { min-height: 0; height: 100%; }
+.runtimeDraftField textarea { height: 118px; min-height: 118px; max-height: 118px; resize: none; overflow-y: auto; }
+.runtimeDetailsDrawer {
+  position: absolute;
+  z-index: 20;
+  inset: 0 0 0 auto;
+  width: min(430px, calc(100% - 24px));
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  box-shadow: -12px 0 32px rgba(31, 43, 54, 0.16);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+.runtimeDrawerHeader {
+  min-height: 58px;
+  padding: 9px 10px 9px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid #d7e1e5;
+  background: #f7fafb;
+}
+.runtimeDrawerPanelToggles { min-width: 0; display: flex; gap: 7px; }
+.runtimeDrawerPanelToggles button {
+  min-height: 36px;
+  padding: 7px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #d7e1e5;
+  border-radius: 7px;
+  background: #fff;
+  color: #52636e;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.runtimeDrawerPanelToggles button[aria-pressed="true"] { border-color: #8fcbd5; background: #eaf7fa; color: #067f92; }
+.runtimeDrawerClose {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  display: inline-grid;
+  place-items: center;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #52636e;
+  cursor: pointer;
+}
+.runtimeDrawerClose:hover { background: #e8f1f3; color: #078da2; }
+.runtimeDetailsContent { min-height: 0; height: auto; }
 .runtimeDetailsContent.bothPanels { grid-template-rows: minmax(0, .8fr) minmax(0, 1.2fr); }
 .runtimeDetailsContent.singlePanel { grid-template-rows: minmax(0, 1fr); }
 .runtimeDetailsMind .emotionWheelShell { min-height: 0; max-height: none; overflow: hidden; }
 .runtimeDetailsContent.bothPanels .emotionWheel { height: 100%; max-height: 260px; width: auto; max-width: 100%; }
 .runtimeDetailsTranscript .runtimeTranscript { max-height: none; min-height: 0; overflow-y: auto; }
 .runtimeStageSwitcher { min-height: 0; max-height: 100%; overflow-y: auto; }
+.appShell[data-theme="dark"] .runtimeAvatarEnvironment { background: #071820; }
 .appShell[data-theme="dark"] .runtimeAvatarViewport { background: #0b202a; }
+.appShell[data-theme="dark"] .runtimeDrawerLauncher,
+.appShell[data-theme="dark"] .runtimeDrawerPanelToggles button { border-color: #294753; background: #102b36; color: #b6c8d1; }
+.appShell[data-theme="dark"] .runtimeDrawerHeader { border-color: #294753; background: #0d2731; }
+.appShell[data-theme="dark"] .runtimeDrawerPanelToggles button[aria-pressed="true"] { border-color: #368391; background: #183e49; color: #65cedb; }
+.appShell[data-theme="dark"] .runtimeDrawerClose { color: #b6c8d1; }
 @media (max-width: 1100px) {
-  .runtimeExperience, .runtimeExperience.detailsClosed { grid-template-columns: minmax(0, 1fr); grid-template-areas: "avatar" "details"; grid-template-rows: minmax(0, 1fr) minmax(130px, 28%); }
-  .runtimeAvatarFocus { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; gap: 8px; }
-  .runtimeStageSwitcher { max-height: 80px; padding: 6px; overflow-y: hidden; }
+  .runtimeExperience,
+  .runtimeExperience.detailsClosed,
+  .runtimeExperience.detailsOpen { grid-template-columns: minmax(0, 1fr); grid-template-areas: "avatar"; grid-template-rows: minmax(0, 1fr); }
+  .runtimeAvatarFocus { width: 100%; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; gap: 8px; }
+  .runtimeStageSwitcher { max-height: 140px; padding: 6px; overflow-y: hidden; }
   .runtimeCalendarHeading { display: none; }
   .runtimeCalendarTimeline { display: flex; gap: 8px; overflow-x: auto; }
   .runtimeCalendarSlot { flex: 1 0 125px; }
-  .runtimeStageSwitcher button { min-height: 0; padding: 6px 10px; gap: 2px; }
-  .runtimeStageSwitcher button small + small, .runtimeStageSwitcher button em { display: none; }
+  .runtimeStageSwitcher .runtimeCallCard { min-height: 0; padding: 6px 10px; gap: 2px; }
+  .runtimeStageSwitcher .runtimeCallCard small + small, .runtimeStageSwitcher .runtimeCallCard em { display: none; }
   .runtimeDetailsContent.bothPanels { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); grid-template-rows: minmax(0, 1fr); }
   .runtimeDetailsContent.singlePanel { grid-template-columns: minmax(0, 1fr); }
   .runtimePanelHeader { min-height: 48px; padding: 8px 12px; }
@@ -5039,21 +5202,23 @@ textarea:focus {
   .runtimeLiveResponse p { font-size: 14px; max-height: 9dvh; }
   .runtimeSpeakerLabel { margin-bottom: 4px; font-size: 11px; }
   .runtimeComposerShell { padding: 10px 14px; }
-  .runtimeDraftField textarea { height: 64px; min-height: 64px; max-height: 64px; }
-  .runtimeSessionStrip { padding-bottom: 6px; gap: 8px; }
+  .runtimeDraftField textarea { height: 96px; min-height: 96px; max-height: 96px; }
   .runtimeCallAdvance { padding: 5px 8px; font-size: 11px; }
   .runtimeDraftLabelRow > span { display: none; }
 }
 @media (max-width: 720px) {
   .runtimeScreen { padding: 10px; gap: 10px; }
-  .runtimeExperience, .runtimeExperience.detailsClosed { grid-template-rows: minmax(0, 1fr) minmax(110px, 24%); gap: 10px; }
+  .runtimeExperience,
+  .runtimeExperience.detailsClosed,
+  .runtimeExperience.detailsOpen { grid-template-rows: minmax(0, 1fr); gap: 10px; }
+  .runtimeDetailsDrawer { width: 100%; }
+  .runtimeAvatarEnvironment { padding: 12px; }
   .runtimeCharacterHeading { padding: 7px 12px; }
   .runtimeCharacterHeading > span { display: none; }
   .runtimeLiveResponseRow { padding: 8px 12px; }
   .runtimeLiveResponse p { max-height: 48px; }
-  .runtimeSessionStrip { flex-direction: row; align-items: center; justify-content: space-between; }
   .runtimeComposerShell { padding: 8px 12px; }
-  .runtimeCallAdvance { max-width: 80%; }
+  .runtimeCallAdvance { max-width: 100%; }
 }
 @media (max-height: 650px) {
   .runtimeScreen { padding: 8px; gap: 8px; }
@@ -5064,11 +5229,12 @@ textarea:focus {
   .runtimeSpeakerLabel { margin-bottom: 3px; }
   .runtimeLiveResponse p { font-size: 14px; max-height: 8dvh; }
   .runtimeComposerShell { padding: 8px 12px; }
-  .runtimeDraftField textarea { height: 56px; min-height: 56px; max-height: 56px; }
-  .runtimeSessionStrip { padding-bottom: 5px; }
+  .runtimeDraftField textarea { height: 88px; min-height: 88px; max-height: 88px; }
 }
 @media (max-width: 1100px) and (max-height: 650px) {
-  .runtimeExperience, .runtimeExperience.detailsClosed { grid-template-rows: minmax(0, 1fr) 100px; }
+  .runtimeExperience,
+  .runtimeExperience.detailsClosed,
+  .runtimeExperience.detailsOpen { grid-template-rows: minmax(0, 1fr); }
   .runtimeAvatarFocus { grid-template-rows: minmax(0, 1fr); }
   .runtimeStageSwitcher { display: none; }
 }

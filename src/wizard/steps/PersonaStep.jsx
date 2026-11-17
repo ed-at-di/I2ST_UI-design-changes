@@ -1,4 +1,4 @@
-import { Dices, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, Dices, Trash2 } from "lucide-react";
 import { InfoNote } from "../../components/InfoNote.jsx";
 import { SelectControl } from "../../components/SelectControl.jsx";
 import { StageTabs } from "../../components/StageTabs.jsx";
@@ -19,12 +19,23 @@ import {
   stagePersonaComplete,
   namedScenarioStages,
 } from "../../lib/stageHelpers.js";
+import { formValue } from "../../lib/scenarioHelpers.js";
 
-function PersonaSelect({ label, value, options, otherValue, onChange, onOtherChange, placeholder, info }) {
+function MissingFieldWarning({ instruction }) {
+  return (
+    <span className="missingFieldWarning" tabIndex="0" role="img" aria-label={instruction}>
+      <AlertTriangle size={17} aria-hidden="true" />
+      <span role="tooltip">{instruction}</span>
+    </span>
+  );
+}
+
+function PersonaSelect({ label, value, options, otherValue, onChange, onOtherChange, placeholder, info, missingInstruction }) {
   const isOther = value === "Other";
   return (
     <label className="personaSelect">
       <span>{label} <InfoNote>{info}</InfoNote></span>
+      {missingInstruction && <MissingFieldWarning instruction={missingInstruction} />}
       <SelectControl value={value} onChange={(event) => onChange(event.target.value)}>
         <option value="" disabled>
           Select {label.toLowerCase()}
@@ -90,18 +101,13 @@ export function PersonaStep({ form, scenario, updateForm, activeStageIndex, setA
     setActiveStageIndex(Math.max(0, Math.min(activeStageIndex, nextStages.length - 1)));
   }
 
-  function updateStageAt(index, patch) {
-    const allStages = ensureScenarioStages(form, stages.length);
-    const nextStages = allStages.map((item, stageIndex) => stageIndex === index ? { ...item, ...patch } : item);
-    updateForm({ stages: nextStages });
-  }
-
   return (
     <div className="wizardStepBody">
       <StageTabs
         stages={stages}
         activeStageIndex={activeStageIndex}
         onSelectStage={setActiveStageIndex}
+        onAddStage={addStage}
         label="Scenario characters"
         idPrefix="stage-persona-tab"
         panelIdPrefix="stage-persona-panel"
@@ -109,30 +115,28 @@ export function PersonaStep({ form, scenario, updateForm, activeStageIndex, setA
 
       <div className="studioGroup scenarioSetupSection characterStepCallSetup">
         <div className="stageSetupHeader">
-          <span className="studioLabel">Characters &amp; Call Order <InfoNote>{FIELD_INFO.scenarioParticipants}</InfoNote></span>
-          {stages.length < 3 && <button className="secondaryButton compactActionButton" type="button" onClick={addStage}><Plus size={15} /><span>Add Character</span></button>}
+          <span className="studioLabel">Role <InfoNote>{FIELD_INFO.scenarioParticipants}</InfoNote></span>
+          {activeStageIndex > 0 && <button className="removeStageButton" type="button" onClick={() => removeStage(activeStageIndex)} aria-label={`Remove character ${activeStageIndex + 1}`}><Trash2 size={15} /></button>}
         </div>
         <div className="scenarioParticipantGrid">
-          {stages.map((stage, index) => (
-            <div className={`scenarioParticipantCard ${index === activeStageIndex ? "active" : ""}`} key={stage.id}>
-              <div className="scenarioParticipantCardHeader">
-                <button type="button" onClick={() => setActiveStageIndex(index)}><strong>Call {index + 1}</strong></button>
-                {index === 0 && <small>Required complainant</small>}
-                {index > 0 && <button className="removeStageButton" type="button" onClick={() => removeStage(index)} aria-label={`Remove character ${index + 1}`}><Trash2 size={15} /></button>}
-              </div>
-              <label className="studioField compactField">
-                <span>Role*</span>
-                <SelectControl value={stage.chatbotRole} disabled={index === 0} onChange={(event) => updateStageAt(index, { chatbotRole: event.target.value })}>
-                  <option value="" disabled>Select a role</option>
-                  {CHATBOT_ROLES.map((role) => {
-                    const selectedStage = stageUsingRole(role, index);
-                    return <option key={role} value={role} disabled={selectedStage >= 0}>{role}{selectedStage >= 0 ? ` — Call ${selectedStage + 1}` : ""}</option>;
-                  })}
-                </SelectControl>
-              </label>
-              {stage.chatbotRole === "Other" && <input value={stage.chatbotRoleOther} onChange={(event) => updateStageAt(index, { chatbotRoleOther: event.target.value })} placeholder="Custom role" />}
+          <div className="scenarioParticipantCard active" key={activeStage.id}>
+            <div className="scenarioParticipantCardHeader">
+              <strong>Character {activeStageIndex + 1}</strong>
+              {activeStageIndex === 0 && <small>Required complainant</small>}
+              {!formValue(activeStage, "chatbotRole", "chatbotRoleOther") && <MissingFieldWarning instruction="Select a role for this character." />}
             </div>
-          ))}
+            <label className="studioField compactField">
+              <span>Role*</span>
+              <SelectControl value={activeStage.chatbotRole} disabled={activeStageIndex === 0} onChange={(event) => updateStage({ chatbotRole: event.target.value })}>
+                <option value="" disabled>Select a role</option>
+                {CHATBOT_ROLES.map((role) => {
+                  const selectedStage = stageUsingRole(role, activeStageIndex);
+                  return <option key={role} value={role} disabled={selectedStage >= 0}>{role}{selectedStage >= 0 ? ` — Call ${selectedStage + 1}` : ""}</option>;
+                })}
+              </SelectControl>
+            </label>
+            {activeStage.chatbotRole === "Other" && <input value={activeStage.chatbotRoleOther} onChange={(event) => updateStage({ chatbotRoleOther: event.target.value })} placeholder="Custom role" />}
+          </div>
         </div>
       </div>
 
@@ -183,6 +187,7 @@ export function PersonaStep({ form, scenario, updateForm, activeStageIndex, setA
             onOtherChange={(value) => updateStage({ personaEmotionalStateOther: value })}
             placeholder="Custom emotional state"
             info={FIELD_INFO.personaEmotionalState}
+            missingInstruction={!formValue(activeStage, "personaEmotionalState", "personaEmotionalStateOther") ? "Select how this character should feel at the start of the call." : ""}
           />
           <PersonaSelect
             label="Trust Level"
@@ -193,6 +198,7 @@ export function PersonaStep({ form, scenario, updateForm, activeStageIndex, setA
             onOtherChange={(value) => updateStage({ personaTrustLevelOther: value })}
             placeholder="Custom trust level"
             info={FIELD_INFO.personaTrustLevel}
+            missingInstruction={!formValue(activeStage, "personaTrustLevel", "personaTrustLevelOther") ? "Select this character's starting level of trust." : ""}
           />
           <PersonaSelect
             label="Communication"
@@ -203,6 +209,7 @@ export function PersonaStep({ form, scenario, updateForm, activeStageIndex, setA
             onOtherChange={(value) => updateStage({ personaCommunicationStyleOther: value })}
             placeholder="Custom communication style"
             info={FIELD_INFO.personaCommunicationStyle}
+            missingInstruction={!formValue(activeStage, "personaCommunicationStyle", "personaCommunicationStyleOther") ? "Select how this character should communicate." : ""}
           />
           <PersonaSelect
             label="Preferred Outcome"
@@ -213,6 +220,7 @@ export function PersonaStep({ form, scenario, updateForm, activeStageIndex, setA
             onOtherChange={(value) => updateStage({ personaPrimaryConcernOther: value })}
             placeholder="Custom primary concern"
             info={FIELD_INFO.personaPrimaryConcern}
+            missingInstruction={!formValue(activeStage, "personaPrimaryConcern", "personaPrimaryConcernOther") ? "Select the outcome this character wants from the conversation." : ""}
           />
         </div>
         <label className="studioField">
