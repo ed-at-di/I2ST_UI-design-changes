@@ -13,10 +13,42 @@ export const MILITARY_BRANCH_OPTIONS = [
 
 export const KPA_OPTIONS = ["EO Interpersonal Skills"];
 
+function ratingBehavior(title, descriptions) {
+  return {
+    title,
+    rate_anchors: descriptions.map((description, index) => ({ rate: index + 1, description })),
+  };
+}
+
 // Mock rubric structure until the connected application provides KPA data.
 export const KPA_BEHAVIOR_GROUPS = {
   "EO Interpersonal Skills": [
-    { title: "Empathy & Support", details: ["Empathy & Reassurance", "Active Listening", "Crisis Management"] },
+    {
+      title: "Empathy & Support",
+      details: [
+        ratingBehavior("Empathy & Reassurance", [
+          "Shows little to no empathy; minimal reassurance; unaware of emotional cues.",
+          "Occasionally shows empathy; offers generic reassurance; inconsistent in recognizing emotions.",
+          "Displays empathy; offers reassurance; generally recognizes emotional cues.",
+          "Consistently empathetic; provides tailored reassurance; sensitive to a range of emotional cues.",
+          "Exemplifies deep empathy; always reassures effectively; intuitively understands and responds to emotions.",
+        ]),
+        ratingBehavior("Active Listening", [
+          "Rarely listens attentively; frequently interrupts or shifts focus.",
+          "Listens intermittently; engages with key points but interrupts.",
+          "Listens actively; summarizes and avoids interruptions.",
+          "Demonstrates active listening consistently; paraphrases and encourages deeper conversation.",
+          "Exemplifies impeccable listening; synthesizes information and responds thoughtfully; fully engaged.",
+        ]),
+        ratingBehavior("Crisis Management", [
+          "Struggles to manage the situation; appears visibly flustered or dismissive. Reacts inappropriately or fails to respond.",
+          "Handles basic aspects of the situation but may be reactive or inconsistent.",
+          "Manages the situation effectively; remains calm and provides standard solutions.",
+          "Proactively handles the situation; de-escalates emotions and anticipates challenges.",
+          "Expertly navigates complex crises; remains composed, strategic, and sensitive under pressure.",
+        ]),
+      ],
+    },
     { title: "Communication Skills", details: ["Clarity of Communication", "Questioning Technique"] },
     { title: "Credibility & Problem-Solving", details: ["Resolution & Procedural Competency", "Documenting Information"] },
   ],

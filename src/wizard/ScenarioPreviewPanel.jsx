@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef } from "react";
-import { Check, Copy, Layers3 } from "lucide-react";
+import { Check, Info, Layers3 } from "lucide-react";
 import { StageTabs } from "../components/StageTabs.jsx";
 import { formValue, selectedList, sourceLabel } from "../lib/scenarioHelpers.js";
 import { activeScenarioStages, personaValuesForStage, stagePersonaComplete } from "../lib/stageHelpers.js";
@@ -103,25 +103,25 @@ export function ScenarioPreviewPanel({
           </span>
           <h2>{draftTitle}</h2>
         </div>
-        <span className={`livePreviewState ${scenario ? "generated" : ""} ${isExistingCopy ? "copy" : ""}`}>{stateLabel}</span>
+        <span
+          className={`livePreviewState ${scenario ? "generated" : ""} ${isExistingCopy ? "copy" : ""}`}
+          tabIndex={isExistingCopy && !copySaved ? 0 : undefined}
+        >
+          {stateLabel}
+          {isExistingCopy && !copySaved && (
+            <>
+              <Info className="livePreviewStateInfo" size={14} aria-hidden="true" />
+              <span className="livePreviewStateTooltip" role="tooltip">
+                <strong>Changes will create a new copy.</strong>
+                The original “{originalName || "library scenario"}” stays unchanged. You can optionally name and save your copy in Review.
+              </span>
+            </>
+          )}
+        </span>
       </header>
 
       <div className="livePreviewBody" ref={previewBodyRef}>
         <div className="livePreviewSharedContent">
-          {isExistingCopy && (
-            <div className={`livePreviewCopyNotice ${copySaved ? "saved" : ""}`}>
-              <Copy size={16} />
-              <div>
-                <strong>{copySaved ? "New copy saved" : "Changes will create a new copy"}</strong>
-                <p>
-                  {copySaved
-                    ? "Continue to generate the final scenario packet."
-                    : `The original “${originalName || "library scenario"}” stays unchanged. You can optionally name and save your copy in Review.`}
-                </p>
-              </div>
-            </div>
-          )}
-
           {visibleSteps.has(0) && <PreviewBlock label="Source" complete={Boolean(sourceTitle)} sectionRef={sourceSectionRef} active={wizardStep === 0} onNavigate={isManualSource ? () => onNavigate?.(0) : undefined}>
             <strong>{sourceTitle || "No source selected yet"}</strong>
             <p>

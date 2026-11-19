@@ -503,8 +503,8 @@ function App() {
     setStatus("");
   }
 
-  function saveExistingCopy() {
-    const name = existingCopyName.trim();
+  function saveExistingCopy(nameOverride) {
+    const name = (typeof nameOverride === "string" ? nameOverride : existingCopyName).trim();
     if (!name || name === existingOriginalName.trim()) return;
     setExistingCopyName(name);
     setExistingCopySaved(true);

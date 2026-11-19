@@ -1,5 +1,5 @@
-import { ArrowRight, ChevronLeft, CircleAlert, Download, Pencil } from "lucide-react";
-import { ExistingCopyBanner } from "../ExistingCopyBanner.jsx";
+import { useState } from "react";
+import { ArrowRight, ChevronLeft, CircleAlert, Download, Pencil, Save, X } from "lucide-react";
 import { namedScenarioStages } from "../../lib/stageHelpers.js";
 import { formValue, selectedList } from "../../lib/scenarioHelpers.js";
 
@@ -23,6 +23,21 @@ export function ReviewStep({
   onSaveCopy,
 }) {
   const stages = namedScenarioStages(form, scenario);
+  const reviewTitle = `${originalName || scenario?.title || "Scenario draft"} (edited)`;
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [saveName, setSaveName] = useState(reviewTitle);
+  const canSave = Boolean(saveName.trim() && saveName.trim() !== originalName?.trim());
+
+  function openSaveModal() {
+    setSaveName(copySaved && !copyDirty ? copyName : reviewTitle);
+    setSaveModalOpen(true);
+  }
+
+  function confirmSave() {
+    if (!canSave) return;
+    onSaveCopy(saveName.trim());
+    setSaveModalOpen(false);
+  }
 
   function editOnKeyboard(event, step) {
     if (event.key !== "Enter" && event.key !== " ") return;
@@ -39,12 +54,21 @@ export function ReviewStep({
         </div>
       )}
 
-      <div className="reviewDocumentLayout hasCopyControls">
+      <div className="reviewDocumentLayout">
         <div className="reviewDocumentColumn">
           <article className="reviewPaper" aria-label="Scenario review packet">
         <div className="reviewPaperTitleBlock">
-          <h3>{scenario?.title || "Scenario draft"}</h3>
-          <p>{scenario ? "Prepared for learner roleplay" : "Complete generation to prepare this packet"}</p>
+          <h3>{reviewTitle}</h3>
+          <div className="reviewTitleActions">
+            <button className="secondaryButton" type="button" onClick={openSaveModal} disabled={busy || loading || !scenario}>
+              <Save size={16} />
+              <span>Save edited scenario</span>
+            </button>
+            <button className="primaryButton" type="button" onClick={onStartChat} disabled={busy || loading}>
+              <span>{scenario ? "Approve & Continue" : "Generate & Continue"}</span>
+              <ArrowRight size={16} />
+            </button>
+          </div>
         </div>
 
         <div className="reviewPaperColumns">
@@ -96,25 +120,18 @@ export function ReviewStep({
               <Download size={16} />
               <span>Download packet</span>
             </button>
-            <button className="primaryButton" type="button" onClick={onStartChat} disabled={busy || loading}>
-              <span>{scenario ? "Approve & continue" : "Generate & continue"}</span>
-              <ArrowRight size={16} />
-            </button>
           </div>
         </div>
-
-          <aside className="reviewSaveSidebar">
-            <ExistingCopyBanner
-              isExistingCopy={isExistingCopy}
-              copyName={copyName}
-              originalName={originalName}
-              saved={copySaved}
-              dirty={copyDirty}
-              onNameChange={onCopyNameChange}
-              onSave={onSaveCopy}
-            />
-          </aside>
       </div>
+
+      {saveModalOpen && <div className="reviewSaveModalBackdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSaveModalOpen(false); }}>
+        <section className="reviewSaveModal" role="dialog" aria-modal="true" aria-labelledby="review-save-title">
+          <div className="reviewSaveModalHeader"><div><span>Save edited scenario</span><h2 id="review-save-title">Name your scenario</h2></div><button type="button" aria-label="Close save dialog" onClick={() => setSaveModalOpen(false)}><X size={20} /></button></div>
+          <label><span>Scenario name</span><input autoFocus value={saveName} onChange={(event) => setSaveName(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") confirmSave(); }} /></label>
+          {!canSave && <p>Enter a scenario name that is different from the original.</p>}
+          <div className="reviewSaveModalActions"><button className="secondaryButton" type="button" onClick={() => setSaveModalOpen(false)}>Cancel</button><button className="primaryButton" type="button" onClick={confirmSave} disabled={!canSave}><Save size={16} /><span>Save scenario</span></button></div>
+        </section>
+      </div>}
     </div>
   );
 }
